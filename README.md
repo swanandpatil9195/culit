@@ -20,11 +20,9 @@ culit = "0.1"
 
 Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
 
-## Examples
+## Example
 
-The possibilities are *endless!*
-
-[`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`: `100nzusize`
+A [`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`: `100nzusize`
 
 ```rust
 use culit::culit;
@@ -52,6 +50,15 @@ mod custom_literal {
     }
 }
 ```
+
+## IDE Support
+
+Hovering over the custom literals shows documentation for the macro that generates them. You can also do "goto definition". It's quite nice!
+
+![IDE Support](https://raw.githubusercontent.com/nik-rev/culit/0b7695e6a79cfbe2873a2c9d5936c6a93a5cbaaa/ide_support.png)
+
+## More Examples
+
 
 Python-like f-strings: `"hello {name}"f`
 
@@ -136,11 +143,7 @@ mod custom_literal {
 }
 ```
 
-## IDE Support
-
-Hovering over the custom literals shows documentation for the macro that generates them. You can also do "goto definition". It's quite nice!
-
-![IDE Support](https://raw.githubusercontent.com/nik-rev/culit/0b7695e6a79cfbe2873a2c9d5936c6a93a5cbaaa/ide_support.png)
+The possibilities are *endless!*
 
 ## Details
 
