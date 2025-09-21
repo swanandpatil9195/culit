@@ -472,6 +472,9 @@ fn transform(ts: TokenStream) -> TokenStream {
                         }
                         // crate::custom_literal::c_str::$suffix!($value)
                         #[cfg(has_c_string)]
+                        // lints for usage of "Literal::c_string" but we explicitly
+                        // check that we are on a version that allows it
+                        #[cfg_attr(has_c_string, allow(clippy::incompatible_msrv))]
                         litrs::Literal::CString(cstring_lit) => expand_custom_literal(
                             lit_name::C_STR,
                             suffix,
