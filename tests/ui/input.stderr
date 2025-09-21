@@ -1,0 +1,13 @@
+error: custom attribute panicked
+ --> tests/ui/input.rs:9:1
+  |
+9 | #[culit(no input allowed)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: `#[culit]` does not take any arguments between `(...)`
+
+error[E0601]: `main` function not found in crate `$CRATE`
+  --> tests/ui/input.rs:10:13
+   |
+10 | fn main() {}
+   |             ^ consider adding a `main` function to `$DIR/tests/ui/input.rs`

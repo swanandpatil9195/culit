@@ -150,8 +150,21 @@
 //! - `b"foo"bar` expands to `crate::custom_literal::byte_str::bar!(b"foo")`
 //! - `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
 //!
-//! **Note**: Negative numbers like `-100` aren't literal themselves, instead it is 2 tokens: `-` followed by the literal `100`.
-//! Implement [`Neg`](std::ops::Neg) for whatever your custom numeric literal expands to
+//! ## Negative literals
+//!
+//! Whatever the macros in `custom_literal::float` or `custom_literal::int` expand to needs to implement the [`Neg`](std::ops::Neg) trait in order to allow using `-` with the custom numeric literals.
+//!
+//! ### Details on negative literals
+//!
+//! You might think that a number like `-100` is a single literal, but it is not. It is 2 tokens: a punctuation `,` followed by a literal `100`. `-100km` expands like this:
+//! - `-` is a punctuation, it is kept as-is
+//! - `100km` is a literal `100` with suffix `km`. It expands to `crate::custom_literal::int::km!("100" 10)`.
+//! - `"100"` is string representation of the number, `10` is the base (which could also be `2`, `8` or `16`)
+//! - The macro receives a string `"100"` instead of an integer `100` because procedural macros cannot create integer literals that are larger than `u128`, but we want to support integer literals of arbitrary size.
+//! - More importantly, interpreting the number itself without the base is a logic error, so passing a string instead of integer makes it far less likely that you'll make mistakes
+//! - `-100km` overall expands to `-crate::custom_literal::int::km!("100" 10)`. Notice the `-` at the beginning, it is kept the same. Whatever `km!` expands to needs to implement the [`Neg`](std::ops::Neg) trait to be able to be used with the `-` operator.
+//!
+//! ## Skeleton
 //!
 //! Here's a skeleton for the `custom_literal` module which must exist at `crate::custom_literal`.
 //! This module adds a new literal for every type of literal:

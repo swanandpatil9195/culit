@@ -1,0 +1,7 @@
+error[E0433]: failed to resolve: could not find `int` in `custom_literal`
+ --> tests/ui/no_mod_int.rs:8:1
+  |
+8 | #[culit]
+  | ^^^^^^^^ could not find `int` in `custom_literal`
+  |
+  = note: this error originates in the attribute macro `culit` (in Nightly builds, run with -Z macro-backtrace for more info)

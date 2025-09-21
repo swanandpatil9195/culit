@@ -1,0 +1,7 @@
+error[E0433]: failed to resolve: could not find `custom_literal` in the crate root
+ --> tests/ui/no_custom_literals_module.rs:7:1
+  |
+7 | #[culit]
+  | ^^^^^^^^ could not find `custom_literal` in the crate root
+  |
+  = note: this error originates in the attribute macro `culit` (in Nightly builds, run with -Z macro-backtrace for more info)

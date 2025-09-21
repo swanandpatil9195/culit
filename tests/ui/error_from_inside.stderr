@@ -1,0 +1,62 @@
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:10:5
+   |
+10 |     0w;
+   |     ^^ expected `()`, found `&str`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:11:5
+   |
+11 |     0.0w;
+   |     ^^^^ expected `()`, found `&str`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:12:5
+   |
+12 |     'x'w;
+   |     ^^^^ expected `()`, found `char`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:13:5
+   |
+13 |     b'x'w;
+   |     ^^^^^ expected `()`, found integer
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:14:5
+   |
+14 |     "x"w;
+   |     ^^^^ expected `()`, found `&str`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:15:5
+   |
+15 |     b"x"w;
+   |     ^^^^^ expected `()`, found `&[u8; 1]`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this
+
+error[E0308]: mismatched types
+  --> tests/ui/error_from_inside.rs:16:5
+   |
+16 |     c"x"w;
+   |     ^^^^^ expected `()`, found `&CStr`
+...
+22 |             let it: () = $value;
+   |                     -- expected due to this

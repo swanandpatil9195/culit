@@ -1,0 +1,25 @@
+error: suffix f16  is not currently used by rust, but it likely will be in the future. To avoid breakage and not compromise rust's compatibility guarantees, we forbid this suffix
+ --> tests/ui/reserved.rs:7:5
+  |
+7 |     70.0f16;
+  |     ^^^^^^^
+
+error: suffix f128  is not currently used by rust, but it likely will be in the future. To avoid breakage and not compromise rust's compatibility guarantees, we forbid this suffix
+ --> tests/ui/reserved.rs:8:5
+  |
+8 |     70.0f128;
+  |     ^^^^^^^^
+
+error: suffix i256  is not currently used by rust, but it likely will be in the future. To avoid breakage and not compromise rust's compatibility guarantees, we forbid this suffix
+  --> tests/ui/reserved.rs:13:5
+   |
+13 |     100i256;
+   |     ^^^^^^^
+
+error[E0433]: failed to resolve: could not find `custom_literal` in the crate root
+  --> tests/ui/reserved.rs:11:1
+   |
+11 | #[culit]
+   | ^^^^^^^^ could not find `custom_literal` in the crate root
+   |
+   = note: this error originates in the attribute macro `culit` (in Nightly builds, run with -Z macro-backtrace for more info)

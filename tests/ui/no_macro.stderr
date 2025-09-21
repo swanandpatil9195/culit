@@ -1,0 +1,5 @@
+error[E0433]: failed to resolve: could not find `km` in `int`
+  --> tests/ui/no_macro.rs:11:13
+   |
+11 |     let a = 10km;
+   |             ^^^^ could not find `km` in `int`

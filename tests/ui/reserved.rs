@@ -1,3 +1,5 @@
+//! Usage of reserved suffixes
+
 use culit::culit;
 
 #[culit]
@@ -11,3 +13,5 @@ fn int() {
     100i256;
     70.0u256;
 }
+
+fn main() {}

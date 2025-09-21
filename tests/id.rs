@@ -1,42 +1,9 @@
 use culit::culit;
 
-mod custom_literal {
-    // `id` for "Identity"
-    macro_rules! id {
-        ($($tt:tt)*) => {
-            stringify!($($tt)*)
-        };
-    }
-
-    pub(crate) use id;
-
-    pub mod int {
-        pub(crate) use super::id;
-    }
-
-    pub mod float {
-        pub(crate) use super::id;
-    }
-
-    pub mod str {
-        pub(crate) use super::id;
-    }
-
-    pub mod char {
-        pub(crate) use super::id;
-    }
-
-    pub mod byte_char {
-        pub(crate) use super::id;
-    }
-
-    pub mod byte_str {
-        pub(crate) use super::id;
-    }
-
-    pub mod c_str {
-        pub(crate) use super::id;
-    }
+#[test]
+fn ui() {
+    let trybuild = trybuild::TestCases::new();
+    trybuild.compile_fail("tests/ui/*.rs");
 }
 
 #[test]
@@ -101,20 +68,56 @@ fn byte_str() {
     assert_eq!(br#"hello"#id, stringify!(b"hello"));
 }
 
-// these tests pass only if we are on Rust >=1.79
-// Oddly enough, in the `tests/` folder our `build.rs` doesn't have any effect
+#[test]
+#[culit]
+fn char() {
+    assert_eq!('a'id, stringify!('a'));
+}
 
-// #[test]
-// #[culit]
-// fn char() {
-//     assert_eq!('a'id, stringify!('a'));
-// }
+#[test]
+#[culit]
+fn c_str() {
+    assert_eq!(c"hello"id, stringify!(c"hello"));
+    assert_eq!(c"hell\\o"id, stringify!(c"hell\\o"));
+    assert_eq!(cr"hell\o"id, stringify!(c"hell\\o"));
+    assert_eq!(cr#"hello"#id, stringify!(c"hello"));
+}
 
-// #[test]
-// #[culit]
-// fn c_str() {
-//     assert_eq!(c"hello"id, stringify!(c"hello"));
-//     assert_eq!(c"hell\\o"id, stringify!(c"hell\\o"));
-//     assert_eq!(cr"hell\o"id, stringify!(c"hell\\o"));
-//     assert_eq!(cr#"hello"#id, stringify!(c"hello"));
-// }
+mod custom_literal {
+    // `id` for "Identity"
+    macro_rules! id {
+        ($($tt:tt)*) => {
+            stringify!($($tt)*)
+        };
+    }
+
+    pub(crate) use id;
+
+    pub mod int {
+        pub(crate) use super::id;
+    }
+
+    pub mod float {
+        pub(crate) use super::id;
+    }
+
+    pub mod str {
+        pub(crate) use super::id;
+    }
+
+    pub mod char {
+        pub(crate) use super::id;
+    }
+
+    pub mod byte_char {
+        pub(crate) use super::id;
+    }
+
+    pub mod byte_str {
+        pub(crate) use super::id;
+    }
+
+    pub mod c_str {
+        pub(crate) use super::id;
+    }
+}
