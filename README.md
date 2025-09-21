@@ -1,4 +1,4 @@
-# `culit` - Custom Literals in Stable Rust like `"hello {name}"f`
+# `culit` - Custom Literals in Rust
 
 <!-- cargo-rdme start -->
 
