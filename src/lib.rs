@@ -138,8 +138,8 @@
 //! at `crate::custom_literal::<type>::<suffix>!(...)`, for example:
 //!
 //! - `100km` expands to `crate::custom_literal::int::km!("100" 10)`
-//!     - `10` is the base (decimal)
 //!     - `"100"` is the value
+//!     - `10` is the base (decimal)
 //! - `70.8e7feet` expands to `crate::custom_literal::float::feet!("70" "8" "e7")`
 //!     - `"70"` is the part before the decimal
 //!     - `"8"` is the part after the decimal
