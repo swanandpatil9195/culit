@@ -14,6 +14,8 @@
 //! culit = "0.1"
 //! ```
 //!
+//! Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
+//!
 //! # Examples
 //!
 //! The possibilities are *endless!*

@@ -1,6 +1,6 @@
 [package]
 name = "culit"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Custom literals in Stable Rust like `\"hello {name}\"f`"
 rust-version = "1.58"

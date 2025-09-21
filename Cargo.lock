@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "culit"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "litrs",
  "version_check",
