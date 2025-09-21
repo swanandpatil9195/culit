@@ -1,11 +1,11 @@
 [package]
 name = "culit"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Custom literals in Stable Rust like `\"hello {name}\"f`"
 rust-version = "1.58"
 authors = ["Nik Revenco <pm@nikrev.com>"]
-repository = "https://github.com/nik-rev/docstr"
+repository = "https://github.com/nik-rev/culit"
 keywords = ["custom", "literal", "proc-macro"]
 categories = ["rust-patterns", "no-std", "no-std::no-alloc"]
 license = "MIT OR Apache-2.0"
