@@ -22,7 +22,7 @@ culit = "0.1"
 
 The possibilities are *endless!*
 
-[`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`
+[`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`: `100nzusize`
 
 ```rust
 use culit::culit;
@@ -51,7 +51,7 @@ fn main() {
 }
 ```
 
-Python-like f-strings
+Python-like f-strings: `"hello {name}"f`
 
 ```rust
 use culit::culit;
@@ -80,7 +80,7 @@ fn main() {
 }
 ```
 
-[`Duration`](std::time::Duration) literals
+[`Duration`](std::time::Duration) literals: `100m`, `2h`...
 
 ```rust
 use culit::culit;

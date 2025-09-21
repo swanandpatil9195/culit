@@ -18,7 +18,7 @@
 //!
 //! The possibilities are *endless!*
 //!
-//! [`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`
+//! [`NonZeroUsize`](std::num::NonZeroUsize) literal that fails to compile if it is `0`: `100nzusize`
 //!
 //! ```
 //! use culit::culit;
@@ -47,7 +47,7 @@
 //! }
 //! ```
 //!
-//! Python-like f-strings
+//! Python-like f-strings: `"hello {name}"f`
 //!
 //! ```
 //! use culit::culit;
@@ -76,7 +76,7 @@
 //! }
 //! ```
 //!
-//! [`Duration`](std::time::Duration) literals
+//! [`Duration`](std::time::Duration) literals: `100m`, `2h`...
 //!
 //! ```
 //! use culit::culit;
