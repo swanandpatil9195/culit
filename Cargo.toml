@@ -1,7 +1,14 @@
 [package]
 name = "culit"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Custom literals in Stable Rust"
+rust-version = "1.56"
+authors = ["Nik Revenco <pm@nikrev.com>"]
+repository = "https://github.com/nik-rev/docstr"
+keywords = ["custom", "literal", "proc-macro"]
+categories = ["rust-patterns", "no-std", "no-std::no-alloc"]
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 # std doesn't provide us a way to get contents of a `proc_macro::Literal`
