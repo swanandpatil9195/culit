@@ -151,7 +151,7 @@
 //! - `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
 //!
 //! **Note**: Negative numbers like `-100` aren't literal themselves, instead it is 2 tokens: `-` followed by the literal `100`.
-//! Implement [`Not`](std::ops::Not) for whatever your custom numeric literal expands to
+//! Implement [`Neg`](std::ops::Neg) for whatever your custom numeric literal expands to
 //!
 //! Here's a skeleton for the `custom_literal` module which must exist at `crate::custom_literal` (you can `#[doc(hidden)]` it if you want).
 //! This module adds a new literal for every type of literal:
