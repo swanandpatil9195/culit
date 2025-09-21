@@ -26,6 +26,13 @@
 //! use culit::culit;
 //! use std::num::NonZeroUsize;
 //!
+//! #[culit]
+//! fn main() {
+//!     assert_eq!(100nzusize, NonZeroUsize::new(100).unwrap());
+//!     // COMPILE ERROR!
+//!     // let illegal = 0nzusize;
+//! }
+//!
 //! mod custom_literal {
 //!     pub mod int {
 //!         macro_rules! nzusize {
@@ -40,13 +47,6 @@
 //!         pub(crate) use nzusize;
 //!     }
 //! }
-//!
-//! #[culit]
-//! fn main() {
-//!     assert_eq!(100nzusize, NonZeroUsize::new(100).unwrap());
-//!     // COMPILE ERROR!
-//!     // let illegal = 0nzusize;
-//! }
 //! ```
 //!
 //! Python-like f-strings: `"hello {name}"f`
@@ -54,17 +54,6 @@
 //! ```
 //! use culit::culit;
 //! use std::time::Duration;
-//!
-//! mod custom_literal {
-//!     pub mod str {
-//!         macro_rules! f {
-//!             ($value:literal) => {
-//!                 format!($value)
-//!             };
-//!         }
-//!         pub(crate) use f;
-//!     }
-//! }
 //!
 //! #[culit]
 //! fn main() {
@@ -76,6 +65,17 @@
 //!         format!("hi, my name is {name} and I am {age} years old")
 //!     );
 //! }
+//!
+//! mod custom_literal {
+//!     pub mod str {
+//!         macro_rules! f {
+//!             ($value:literal) => {
+//!                 format!($value)
+//!             };
+//!         }
+//!         pub(crate) use f;
+//!     }
+//! }
 //! ```
 //!
 //! [`Duration`](std::time::Duration) literals: `100m`, `2h`...
@@ -83,6 +83,17 @@
 //! ```
 //! use culit::culit;
 //! use std::time::Duration;
+//!
+//! #[culit]
+//! fn main() {
+//!     assert_eq!(
+//!         100d + 11h + 8m + 7s,
+//!         Duration::from_secs(100 * 60 * 60 * 24)
+//!         + Duration::from_secs(11 * 60 * 60)
+//!         + Duration::from_secs(8 * 60)
+//!         + Duration::from_secs(7)
+//!     );
+//! }
 //!
 //! mod custom_literal {
 //!     pub mod int {
@@ -118,17 +129,6 @@
 //!         }
 //!         pub(crate) use s;
 //!     }
-//! }
-//!
-//! #[culit]
-//! fn main() {
-//!     assert_eq!(
-//!         100d + 11h + 8m + 7s,
-//!         Duration::from_secs(100 * 60 * 60 * 24)
-//!         + Duration::from_secs(11 * 60 * 60)
-//!         + Duration::from_secs(8 * 60)
-//!         + Duration::from_secs(7)
-//!     );
 //! }
 //! ```
 //!
