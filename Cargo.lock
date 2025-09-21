@@ -7,6 +7,7 @@ name = "culit"
 version = "0.1.0"
 dependencies = [
  "litrs",
+ "version_check",
 ]
 
 [[package]]
@@ -14,3 +15,9 @@ name = "litrs"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e4cf394bcd88ba72eb3b2862e21ef6458b0e1586654e213b0176e667bb9d19e"
+
+[[package]]
+name = "version_check"
+version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"

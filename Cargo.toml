@@ -2,8 +2,8 @@
 name = "culit"
 version = "0.1.0"
 edition = "2021"
-description = "Custom literals in Stable Rust"
-rust-version = "1.56"
+description = "Custom literals in Stable Rust like `\"hello {name}\"f`"
+rust-version = "1.58"
 authors = ["Nik Revenco <pm@nikrev.com>"]
 repository = "https://github.com/nik-rev/docstr"
 keywords = ["custom", "literal", "proc-macro"]
@@ -13,6 +13,9 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 # std doesn't provide us a way to get contents of a `proc_macro::Literal`
 litrs = "0.5"
+
+[build-dependencies]
+version_check = "0.9"
 
 [lib]
 proc-macro = true

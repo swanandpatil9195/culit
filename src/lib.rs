@@ -1,7 +1,7 @@
 //! [![crates.io](https://img.shields.io/crates/v/culit?style=flat-square&logo=rust)](https://crates.io/crates/culit)
 //! [![docs.rs](https://img.shields.io/badge/docs.rs-culit-blue?style=flat-square&logo=docs.rs)](https://docs.rs/culit)
 //! ![license](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue?style=flat-square)
-//! ![msrv](https://img.shields.io/badge/msrv-1.56-blue?style=flat-square&logo=rust)
+//! ![msrv](https://img.shields.io/badge/msrv-1.58-blue?style=flat-square&logo=rust)
 //! [![github](https://img.shields.io/github/stars/nik-rev/culit)](https://github.com/nik-rev/culit)
 //!
 //! You probably know that numbers in Rust can be suffixed to specify their type, e.g. `100i32`.
@@ -443,7 +443,20 @@ fn transform(ts: TokenStream) -> TokenStream {
                                     .with_span(span),
                             ),
                         ),
+                        #[cfg(not(has_c_string))]
+                        litrs::Literal::CString(_cstring_lit) => {
+                            return CompileError::new(
+                                tt_lit.span(),
+                                concat!(
+                                    "custom c-string literal with suffix ",
+                                    "is only supported on Rust version >=1.79"
+                                ),
+                            )
+                            .into_iter()
+                            .collect();
+                        }
                         // crate::custom_literal::c_str::$suffix!($value)
+                        #[cfg(has_c_string)]
                         litrs::Literal::CString(cstring_lit) => expand_custom_literal(
                             lit_name::C_STR,
                             suffix,
@@ -552,6 +565,7 @@ mod lit_name {
     pub const CHAR: &str = "char";
     pub const BYTE_CHAR: &str = "byte_char";
     pub const BYTE_STR: &str = "byte_str";
+    #[cfg(has_c_string)]
     pub const C_STR: &str = "c_str";
 }
 
