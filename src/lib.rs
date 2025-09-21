@@ -132,6 +132,12 @@
 //! }
 //! ```
 //!
+//! # IDE Support
+//!
+//! Hovering over the custom literals shows documentation for the macro that generates them. You can also do "goto definition". It's quite nice!
+//!
+//! ![IDE Support](https://raw.githubusercontent.com/nik-rev/culit/0b7695e6a79cfbe2873a2c9d5936c6a93a5cbaaa/ide_support.png)
+//!
 //! # Details
 //!
 //! `#[culit]` recursively replaces every literal that has a non-standard suffix with a call to the macro
