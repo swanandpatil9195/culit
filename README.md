@@ -2,11 +2,11 @@
 
 <!-- cargo-rdme start -->
 
-[![crates.io](https://img.shields.io/crates/v/docstr?style=flat-square&logo=rust)](https://crates.io/crates/docstr)
-[![docs.rs](https://img.shields.io/badge/docs.rs-docstr-blue?style=flat-square&logo=docs.rs)](https://docs.rs/docstr)
+[![crates.io](https://img.shields.io/crates/v/culit?style=flat-square&logo=rust)](https://crates.io/crates/culit)
+[![docs.rs](https://img.shields.io/badge/docs.rs-culit-blue?style=flat-square&logo=docs.rs)](https://docs.rs/culit)
 ![license](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue?style=flat-square)
 ![msrv](https://img.shields.io/badge/msrv-1.56-blue?style=flat-square&logo=rust)
-[![github](https://img.shields.io/github/stars/nik-rev/docstr)](https://github.com/nik-rev/docstr)
+[![github](https://img.shields.io/github/stars/nik-rev/culit)](https://github.com/nik-rev/culit)
 
 You probably know that numbers in Rust can be suffixed to specify their type, e.g. `100i32`.
 But did you know that syntactically *any* literal can have a suffix? **And did you know that the suffix can be whatever you want**?
