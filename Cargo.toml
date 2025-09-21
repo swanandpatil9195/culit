@@ -1,0 +1,11 @@
+[package]
+name = "culit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# std doesn't provide us a way to get contents of a `proc_macro::Literal`
+litrs = "0.5"
+
+[lib]
+proc-macro = true

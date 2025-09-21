@@ -1,0 +1,4 @@
+# `docstr`
+
+<!-- cargo-rdme start -->
+
