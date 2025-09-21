@@ -506,10 +506,7 @@ fn expand_custom_literal(
     ts: TokenStream,
 ) -> TokenStream {
     TokenStream::from_iter([
-        // NOTE: hovering over the unit will show documentation for the crate.
-        // this is really sad, but replacing the span with `Span::call_site()` makes
-        // compile errors stop showing exactly at the literal, and show at the proc macro itself
-        TokenTree::Ident(Ident::new("crate", span)),
+        TokenTree::Ident(Ident::new("crate", Span::call_site())),
         TokenTree::Punct(Punct::new(':', Spacing::Joint)),
         TokenTree::Punct(Punct::new(':', Spacing::Joint)),
         TokenTree::Ident(Ident::new("custom_literal", Span::call_site())),
