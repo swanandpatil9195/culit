@@ -259,6 +259,11 @@ use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenSt
 /// # #[derive(PartialEq, Debug)]
 /// struct Kilometers(u32);
 ///
+/// #[culit]
+/// fn main() {
+///     assert_eq!(10km, Kilometers(10));
+/// }
+///
 /// mod custom_literal {
 ///     pub mod integer {
 ///         macro_rules! km {
@@ -268,11 +273,6 @@ use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenSt
 ///         }
 ///         pub(crate) use km;
 ///     }
-/// }
-///
-/// #[culit]
-/// fn main() {
-///     assert_eq!(10km, Kilometers(10));
 /// }
 /// ```
 ///
