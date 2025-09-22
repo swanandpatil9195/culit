@@ -36,14 +36,14 @@ fn main() {
 }
 
 mod custom_literal {
-    pub mod int {
+    pub mod integer {
         macro_rules! nzusize {
             // handle `0` specially
-            ("0" $base:literal) => {
+            (0) => {
                 compile_error!("`0` is not a valid `NonZeroUsize`")
             };
-            ($value:literal $base:literal) => {
-                NonZeroUsize::new(usize::from_str_radix($value, $base).unwrap()).unwrap()
+            ($value:literal) => {
+                const { NonZeroUsize::new($value).unwrap() }
             };
         }
         pub(crate) use nzusize;
@@ -78,7 +78,7 @@ fn main() {
 }
 
 mod custom_literal {
-    pub mod str {
+    pub mod string {
         macro_rules! f {
             ($value:literal) => {
                 format!($value)
@@ -107,35 +107,35 @@ fn main() {
 }
 
 mod custom_literal {
-    pub mod int {
+    pub mod integer {
         // day
         macro_rules! d {
-            ($value:literal $base:literal) => {
-                Duration::from_secs(60 * 60 * 24 * u64::from_str_radix($value, $base).unwrap())
+            ($value:literal) => {
+                Duration::from_secs(60 * 60 * 24 * $value)
             };
         }
         pub(crate) use d;
 
         // hour
         macro_rules! h {
-            ($value:literal $base:literal) => {
-                Duration::from_secs(60 * 60 * u64::from_str_radix($value, $base).unwrap())
+            ($value:literal) => {
+                Duration::from_secs(60 * 60 * $value)
             };
         }
         pub(crate) use h;
 
         // minute
         macro_rules! m {
-            ($value:literal $base:literal) => {
-                Duration::from_secs(60 * u64::from_str_radix($value, $base).unwrap())
+            ($value:literal) => {
+                Duration::from_secs(60 * $value)
             };
         }
         pub(crate) use m;
 
         // second
         macro_rules! s {
-            ($value:literal $base:literal) => {
-                Duration::from_secs(u64::from_str_radix($value, $base).unwrap())
+            ($value:literal) => {
+                Duration::from_secs($value)
             };
         }
         pub(crate) use s;
@@ -147,35 +147,19 @@ The possibilities are *endless!*
 
 ## Details
 
-`#[culit]` recursively replaces every literal that has a non-standard suffix with a call to the macro
+`#[culit]` replaces every literal that has a custom suffix with a call to the macro
 at `crate::custom_literal::<type>::<suffix>!(...)`, for example:
 
-- `100km` expands to `crate::custom_literal::int::km!("100" 10)`
-    - `"100"` is the value
-    - `10` is the base (decimal)
-- `70.8e7feet` expands to `crate::custom_literal::float::feet!("70" "8" "e7")`
-    - `"70"` is the part before the decimal
-    - `"8"` is the part after the decimal
-    - `"e7"` is the exponent
+- `100km` expands to `crate::custom_literal::int::km!(100)`
+- `70.8e7feet` expands to `crate::custom_literal::float::feet!(70 8 7)`
+    - `70` is the part before the decimal
+    - `8` is the part after the decimal. If missing like in `70e8` then it defaults to `0`
+    - `7` is the exponent. If missing like in `70.0` then it defaults to `1`
 - `'a'ascii` expands to `crate::custom_literal::char::ascii!('a')`
 - `b'a'ascii` expands to `crate::custom_literal::byte_char::ascii!(97)`
 - `"foo"bar` expands to `crate::custom_literal::str::bar!("foo")`
 - `b"foo"bar` expands to `crate::custom_literal::byte_str::bar!(b"foo")`
 - `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
-
-### Negative literals
-
-Whatever the macros in `custom_literal::float` or `custom_literal::int` expand to needs to implement the [`Neg`](std::ops::Neg) trait in order to allow using `-` with the custom numeric literals.
-
-#### Details on negative literals
-
-You might think that a number like `-100` is a single literal, but it is not. It is 2 tokens: a punctuation `,` followed by a literal `100`. `-100km` expands like this:
-- `-` is a punctuation, it is kept as-is
-- `100km` is a literal `100` with suffix `km`. It expands to `crate::custom_literal::int::km!("100" 10)`.
-- `"100"` is string representation of the number, `10` is the base (which could also be `2`, `8` or `16`)
-- The macro receives a string `"100"` instead of an integer `100` because procedural macros cannot create integer literals that are larger than `u128`, but we want to support integer literals of arbitrary size.
-- More importantly, interpreting the number itself without the base is a logic error, so passing a string instead of integer makes it far less likely that you'll make mistakes
-- `-100km` overall expands to `-crate::custom_literal::int::km!("100" 10)`. Notice the `-` at the beginning, it is kept the same. Whatever `km!` expands to needs to implement the [`Neg`](std::ops::Neg) trait to be able to be used with the `-` operator.
 
 ### Skeleton
 
@@ -184,34 +168,31 @@ This module adds a new literal for every type of literal:
 
 ```rust
 mod custom_literal {
-    pub mod int {
+    pub mod integer {
         // 0x100custom
-        //
-        // ^^ base - `16`. Can be one of: 16, 10, 8 or 2
-        //   ^^^ value - "100"
         macro_rules! custom {
-            ($value:literal $base:literal) => {
+            ($value:literal) => {
                 // ...
             }
         }
         pub(crate) use custom;
     }
 
-    pub mod float {
-        // 70.3141e100custom
+    pub mod decimal {
+        // 70.3141e-100custom
         //
-        // ^^ before_decimal - "70"
-        //    ^^^^ after_decimal - "3141". Can be "" if no after_decimal
-        //         ^^^ exponent - "100". Can be "" if no exponent
+        // ^^ integral              70
+        //    ^^^^ fractional       3141
+        //         ^^^ exponent    -100
         macro_rules! custom {
-            ($before_decimal:literal $after_decimal:literal $exponent:literal) => {
+            ($integral:literal $fractional:literal $exponent:literal) => {
                 // ...
             }
         }
         pub(crate) use custom;
     }
 
-    pub mod str {
+    pub mod string {
         // "foo_bar"custom
         // ^^^^^^^^^ value - "foo_bar"
         macro_rules! custom {
@@ -222,7 +203,7 @@ mod custom_literal {
         pub(crate) use custom;
     }
 
-    pub mod char {
+    pub mod character {
         // 'x'custom
         // ^^^ value - 'x'
         macro_rules! custom {
@@ -233,7 +214,7 @@ mod custom_literal {
         pub(crate) use custom;
     }
 
-    pub mod byte_char {
+    pub mod byte_character {
         // b'a'custom
         //   ^ value - 97
         macro_rules! custom {
@@ -244,7 +225,7 @@ mod custom_literal {
         pub(crate) use custom;
     }
 
-    pub mod byte_str {
+    pub mod byte_string {
         // b"foo_bar"custom
         // ^^^^^^^^^^ value - b"foo_bar"
         macro_rules! custom {
@@ -255,7 +236,7 @@ mod custom_literal {
         pub(crate) use custom;
     }
 
-    pub mod c_str {
+    pub mod c_string {
         // c"string"custom
         // ^^^^^^^^^ value - c"string"
         macro_rules! custom {
