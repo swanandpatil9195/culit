@@ -288,198 +288,171 @@ pub fn culit(args: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Recursively replaces all literals in the `TokenStream` with a call to `crate::custom_literal::$literal_type::$suffix!($ts)`
 fn transform(ts: TokenStream) -> TokenStream {
-    ts.into_iter()
-        .flat_map(|tt| {
-            // I1 = [TokenTree; 12]
-            // I2 = [TokenTree; 1]
-            // I3 = [TokenTree; 3]
+    let mut output = TokenStream::new();
 
-            match tt {
-                TokenTree::Literal(tt_lit) => {
-                    let span = tt_lit.span();
+    for tt in ts {
+        match tt {
+            TokenTree::Literal(tt_lit) => {
+                let span = tt_lit.span();
 
-                    // NOTE: `litrs::Literal::from(token_tree::Literal) exists but it unnecessarily takes by-value,
-                    // so we avoid an unnecessary clone here
-                    let lit = litrs::Literal::parse(tt_lit.to_string()).expect(concat!(
-                        "bug in the implementation of `litrs`, ",
-                        "`token_tree::Literal` -> `litrs::Literal` is infallible"
-                    ));
+                // NOTE: `litrs::Literal::from(token_tree::Literal) exists but it unnecessarily takes by-value,
+                // so we avoid an unnecessary clone here
+                let lit = litrs::Literal::parse(tt_lit.to_string()).expect(concat!(
+                    "bug in the implementation of `litrs`, ",
+                    "`token_tree::Literal` -> `litrs::Literal` is infallible"
+                ));
 
-                    let suffix = lit.suffix();
+                let suffix = lit.suffix();
 
-                    if suffix.is_empty() {
-                        // Totally skip this literal as there's no suffix
-                        return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
-                    }
+                if suffix.is_empty() {
+                    // Totally skip this literal as there's no suffix
+                    output.extend([TokenTree::Literal(tt_lit)]);
+                    continue;
+                }
 
-                    const RESERVED_MESSAGE: &str = concat!(
-                        " is not currently used ",
-                        "by rust, but it likely will be in the future",
-                        ". To avoid breakage and not compromise rust's compatibility guarantees, ",
-                        "we forbid this suffix"
-                    );
+                const RESERVED_MESSAGE: &str = concat!(
+                    " is not currently used ",
+                    "by rust, but it likely will be in the future",
+                    ". To avoid breakage and not compromise rust's compatibility guarantees, ",
+                    "we forbid this suffix"
+                );
 
-                    match &lit {
-                        litrs::Literal::Integer(integer_lit) => {
-                            if INT_SUFFIXES.contains(&suffix) {
-                                return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
-                            } else if INT_SUFFIXES_RESERVED.contains(&suffix) {
-                                return AnonIter::I3(
-                                    CompileError::new(
-                                        span,
-                                        format!("suffix {suffix} {RESERVED_MESSAGE}"),
-                                    )
-                                    .into_iter(),
-                                );
-                            }
-
-                            let mut int = String::with_capacity(integer_lit.raw_input().len());
-                            int.push_str(integer_lit.base().prefix());
-                            int.push_str(integer_lit.raw_main_part());
-                            int.parse::<Literal>().expect(concat!(
-                                "if it wasn't a valid literal, `litrs::Literal`",
-                                " would not be able to parse it"
+                match &lit {
+                    litrs::Literal::Integer(integer_lit) => {
+                        if INT_SUFFIXES.contains(&suffix) {
+                            output.extend([TokenTree::Literal(tt_lit)]);
+                            continue;
+                        } else if INT_SUFFIXES_RESERVED.contains(&suffix) {
+                            output.extend(CompileError::new(
+                                span,
+                                format!("suffix {suffix} {RESERVED_MESSAGE}"),
                             ));
+                            continue;
+                        }
 
-                            AnonIter::I1(
-                                expand_custom_literal(
-                                    lit_name::INTEGER,
-                                    suffix,
-                                    span,
-                                    TokenStream::from(TokenTree::Literal(
-                                        int.parse::<Literal>().expect(concat!(
-                                            "if it wasn't a valid literal, `litrs::Literal`",
-                                            " would not be able to parse it"
-                                        )),
-                                    )),
-                                )
-                                .into_iter(),
-                            )
-                        }
-                        // crate::custom_literal::str::$suffix!($value)
-                        litrs::Literal::String(string_lit) => AnonIter::I1(
-                            expand_custom_literal(
-                                lit_name::STRING,
-                                suffix,
-                                span,
-                                TokenStream::from(
-                                    // $value
-                                    TokenTree::Literal(Literal::string(string_lit.value()))
-                                        .with_span(span),
-                                ),
-                            )
-                            .into_iter(),
-                        ),
-                        litrs::Literal::Float(float_lit) => {
-                            if FLOAT_SUFFIXES.contains(&suffix) {
-                                return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
-                            } else if FLOAT_SUFFIXES_RESERVED.contains(&suffix) {
-                                return AnonIter::I3(
-                                    CompileError::new(
-                                        span,
-                                        format!("suffix {suffix} {RESERVED_MESSAGE}"),
-                                    )
-                                    .into_iter(),
-                                );
-                            }
+                        let mut int = String::with_capacity(integer_lit.raw_input().len());
+                        int.push_str(integer_lit.base().prefix());
+                        int.push_str(integer_lit.raw_main_part());
+                        int.parse::<Literal>().expect(concat!(
+                            "if it wasn't a valid literal, `litrs::Literal`",
+                            " would not be able to parse it"
+                        ));
 
-                            AnonIter::I1(
-                                expand_custom_literal(
-                                    lit_name::FLOAT,
-                                    suffix,
-                                    span,
-                                    TokenStream::from(TokenTree::Literal(
-                                        float_lit.number_part().parse::<Literal>().expect(concat!(
-                                            "if it wasn't a valid literal, `litrs::Literal`",
-                                            " would not be able to parse it"
-                                        )),
-                                    )),
-                                )
-                                .into_iter(),
-                            )
-                        }
-                        // crate::custom_literal::char::$suffix!($value)
-                        litrs::Literal::Char(char_lit) => AnonIter::I1(
-                            expand_custom_literal(
-                                lit_name::CHARACTER,
-                                suffix,
-                                span,
-                                TokenStream::from(
-                                    // $value
-                                    TokenTree::Literal(Literal::character(char_lit.value()))
-                                        .with_span(span),
+                        output.extend(expand_custom_literal(
+                            lit_name::INTEGER,
+                            suffix,
+                            span,
+                            TokenStream::from(TokenTree::Literal(int.parse::<Literal>().expect(
+                                concat!(
+                                    "if it wasn't a valid literal, `litrs::Literal`",
+                                    " would not be able to parse it"
                                 ),
-                            )
-                            .into_iter(),
+                            ))),
+                        ));
+                    }
+                    // crate::custom_literal::str::$suffix!($value)
+                    litrs::Literal::String(string_lit) => output.extend(expand_custom_literal(
+                        lit_name::STRING,
+                        suffix,
+                        span,
+                        TokenStream::from(
+                            // $value
+                            TokenTree::Literal(Literal::string(string_lit.value())).with_span(span),
                         ),
-                        // crate::custom_literal::byte_char::$suffix!($value)
-                        litrs::Literal::Byte(byte_lit) => AnonIter::I1(
-                            expand_custom_literal(
-                                lit_name::BYTE_CHARACTER,
-                                suffix,
+                    )),
+                    litrs::Literal::Float(float_lit) => {
+                        if FLOAT_SUFFIXES.contains(&suffix) {
+                            output.extend([TokenTree::Literal(tt_lit)].into_iter());
+                            continue;
+                        } else if FLOAT_SUFFIXES_RESERVED.contains(&suffix) {
+                            output.extend(CompileError::new(
                                 span,
-                                TokenStream::from(
-                                    // $value
-                                    TokenTree::Literal(Literal::byte_character(byte_lit.value()))
-                                        .with_span(span),
-                                ),
-                            )
-                            .into_iter(),
+                                format!("suffix {suffix} {RESERVED_MESSAGE}"),
+                            ));
+                            continue;
+                        }
+
+                        output.extend(expand_custom_literal(
+                            lit_name::FLOAT,
+                            suffix,
+                            span,
+                            TokenStream::from(TokenTree::Literal(
+                                float_lit.number_part().parse::<Literal>().expect(concat!(
+                                    "if it wasn't a valid literal, `litrs::Literal`",
+                                    " would not be able to parse it"
+                                )),
+                            )),
+                        ));
+                    }
+                    // crate::custom_literal::char::$suffix!($value)
+                    litrs::Literal::Char(char_lit) => output.extend(expand_custom_literal(
+                        lit_name::CHARACTER,
+                        suffix,
+                        span,
+                        TokenStream::from(
+                            // $value
+                            TokenTree::Literal(Literal::character(char_lit.value()))
+                                .with_span(span),
                         ),
-                        // crate::custom_literal::byte_str::$suffix!($value)
-                        litrs::Literal::ByteString(byte_string_lit) => {
-                            AnonIter::I1(
-                                expand_custom_literal(
-                                    lit_name::BYTE_STRING,
-                                    suffix,
-                                    span,
-                                    TokenStream::from(
-                                        // $value
-                                        TokenTree::Literal(Literal::byte_string(
-                                            byte_string_lit.value(),
-                                        ))
-                                        .with_span(span),
-                                    ),
-                                )
-                                .into_iter(),
-                            )
-                        }
-                        litrs::Literal::CString(cstring_lit) => {
-                            AnonIter::I1(
-                                expand_custom_literal(
-                                    lit_name::C_STRING,
-                                    suffix,
-                                    span,
-                                    TokenStream::from(
-                                        // $value
-                                        TokenTree::Literal(Literal::c_string(cstring_lit.value()))
-                                            .with_span(span),
-                                    ),
-                                )
-                                .into_iter(),
-                            )
-                        }
-                        litrs::Literal::Bool(_bool_lit) => {
-                            unreachable!(
-                                "booleans aren't `TokenTree::Literal`, they're `TokenTree::Ident`"
-                            )
-                        }
+                    )),
+                    // crate::custom_literal::byte_char::$suffix!($value)
+                    litrs::Literal::Byte(byte_lit) => output.extend(expand_custom_literal(
+                        lit_name::BYTE_CHARACTER,
+                        suffix,
+                        span,
+                        TokenStream::from(
+                            // $value
+                            TokenTree::Literal(Literal::byte_character(byte_lit.value()))
+                                .with_span(span),
+                        ),
+                    )),
+                    // crate::custom_literal::byte_str::$suffix!($value)
+                    litrs::Literal::ByteString(byte_string_lit) => {
+                        output.extend(expand_custom_literal(
+                            lit_name::BYTE_STRING,
+                            suffix,
+                            span,
+                            TokenStream::from(
+                                // $value
+                                TokenTree::Literal(Literal::byte_string(byte_string_lit.value()))
+                                    .with_span(span),
+                            ),
+                        ))
+                    }
+                    litrs::Literal::CString(cstring_lit) => {
+                        output.extend(expand_custom_literal(
+                            lit_name::C_STRING,
+                            suffix,
+                            span,
+                            TokenStream::from(
+                                // $value
+                                TokenTree::Literal(Literal::c_string(cstring_lit.value()))
+                                    .with_span(span),
+                            ),
+                        ))
+                    }
+                    litrs::Literal::Bool(_bool_lit) => {
+                        unreachable!(
+                            "booleans aren't `TokenTree::Literal`, they're `TokenTree::Ident`"
+                        )
                     }
                 }
-                TokenTree::Group(group) => {
-                    AnonIter::I2(
-                        [TokenTree::Group(Group::new(
-                            group.delimiter(),
-                            // Recurse
-                            transform(group.stream()),
-                        ))]
-                        .into_iter(),
-                    )
-                }
-                next_tt => AnonIter::I2([next_tt].into_iter()),
             }
-        })
-        .collect()
+            TokenTree::Group(group) => {
+                output.extend(
+                    [TokenTree::Group(Group::new(
+                        group.delimiter(),
+                        // Recurse
+                        transform(group.stream()),
+                    ))]
+                    .into_iter(),
+                )
+            }
+            next_tt => output.extend([next_tt]),
+        }
+    }
+
+    output
 }
 
 /// Expands a custom literal into `crate::custom_literal::$literal_type::$suffix!($ts)`
@@ -589,34 +562,3 @@ const FLOAT_SUFFIXES: &[&str] = &["f32", "f64"];
 
 /// Float suffixes currently not accepted, but could be in the future
 const FLOAT_SUFFIXES_RESERVED: &[&str] = &["f16", "f128"];
-
-/// Wraps many `impl Iterator` which may be of different types
-///
-/// Functions returning `-> impl Iterator` must have the same return type
-/// from all branches, but this is overly restrictive.
-///
-/// We may want to return 2 or more different iterators from the same function,
-/// and this type allows that by wrapping each unique iterator in a variant of
-/// this enum.
-enum AnonIter<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>, I3: Iterator<Item = T>> {
-    /// The first `impl Iterator`
-    I1(I1),
-    /// The second `impl Iterator`
-    I2(I2),
-    /// The third `impl Iterator`
-    I3(I3),
-}
-
-impl<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>, I3: Iterator<Item = T>> Iterator
-    for AnonIter<T, I1, I2, I3>
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self {
-            AnonIter::I1(i1) => i1.next(),
-            AnonIter::I2(i2) => i2.next(),
-            AnonIter::I3(i3) => i3.next(),
-        }
-    }
-}
