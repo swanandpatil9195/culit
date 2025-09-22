@@ -60,7 +60,6 @@
 //!
 //! ```
 //! use culit::culit;
-//! use std::time::Duration;
 //!
 //! #[culit]
 //! fn main() {

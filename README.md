@@ -64,7 +64,6 @@ Python-like f-strings: `"hello {name}"f`
 
 ```rust
 use culit::culit;
-use std::time::Duration;
 
 #[culit]
 fn main() {
