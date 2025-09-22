@@ -1,7 +1,7 @@
 error[E0308]: mismatched types
   --> tests/ui/error_from_inside.rs:8:1
    |
-8  | #[culit]
+ 8 | #[culit]
    | ^^^^^^^^ expected `()`, found integer
 ...
 22 |             let it: () = $value;
@@ -12,7 +12,7 @@ error[E0308]: mismatched types
 error[E0308]: mismatched types
   --> tests/ui/error_from_inside.rs:8:1
    |
-8  | #[culit]
+ 8 | #[culit]
    | ^^^^^^^^ expected `()`, found floating-point number
 ...
 22 |             let it: () = $value;
