@@ -15,7 +15,7 @@ This crate provides an attribute macro `#[culit]` for "Custom Literals". When ap
 
 ```toml
 [dependencies]
-culit = "0.1"
+culit = "0.2"
 ```
 
 Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
