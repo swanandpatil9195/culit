@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! culit = "0.3"
+//! culit = "0.4"
 //! ```
 //!
 //! Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
@@ -149,7 +149,7 @@
 //! |literal|expansion|
 //! |---|---|
 //! | `100km` | `crate::custom_literal::integer::km!(100)` |
-//! | `70.008e7feet` | `crate::custom_literal::decimal::feet!(70.008e7)` |
+//! | `70.008e7feet` | `crate::custom_literal::float::feet!(70.008e7)` |
 //! | `"foo"bar` | `crate::custom_literal::string::bar!("foo")` |
 //! | `'a'ascii` | `crate::custom_literal::character::ascii!('a')` |
 //! | `b"foo"bar` | `crate::custom_literal::byte_string::bar!(b"foo")` |
@@ -177,7 +177,7 @@
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod decimal {
+//!     pub mod float {
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -385,7 +385,7 @@ fn transform(ts: TokenStream) -> TokenStream {
 
                             AnonIter::I1(
                                 expand_custom_literal(
-                                    lit_name::DECIMAL,
+                                    lit_name::FLOAT,
                                     suffix,
                                     span,
                                     TokenStream::from(TokenTree::Literal(
@@ -564,7 +564,7 @@ impl TokenTreeExt for TokenTree {
 /// Name of modules for all literal types
 mod lit_name {
     pub const INTEGER: &str = "integer";
-    pub const DECIMAL: &str = "decimal";
+    pub const FLOAT: &str = "float";
     pub const STRING: &str = "string";
     pub const CHARACTER: &str = "character";
     pub const BYTE_CHARACTER: &str = "byte_character";

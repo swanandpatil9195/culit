@@ -29,7 +29,7 @@ mod custom_literal {
         pub(crate) use super::w;
     }
 
-    pub mod decimal {
+    pub mod float {
         pub(crate) use super::w;
     }
 

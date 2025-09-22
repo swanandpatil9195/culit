@@ -1,3 +1,11 @@
+# v0.4.0
+
+Renamed `decimal` to `float` to avoid confusion.
+
+Even though it is not 100% correct (since floats refer to the IEEE formats, but our floats can have an arbitrary exponent,
+precision and size), it'd technically be more correct to call them "real"s.
+But Rust does not make this distinction, so in order to raise the minimum possible confusion let's just call them `float`s.
+
 # v0.3.0
 
 - Integers and decimals are passed as-is, without splitting them up. e.g:

@@ -37,21 +37,21 @@ fn integer_literals() {
     assert_eq!(0o7_7_7id, 511);
     assert_eq!(0o_7_7_7_id, 511);
 
-    // Decimal no underscore
+    // Float no underscore
     assert_eq!(0id, 0);
     assert_eq!(1id, 1);
     assert_eq!(10id, 10);
     assert_eq!(100id, 100);
     assert_eq!(999id, 999);
 
-    // Decimal with underscores
+    // Float with underscores
     assert_eq!(1_0_0id, 100);
     assert_eq!(1_000id, 1000);
     assert_eq!(9_9_9id, 999);
     assert_eq!(1_000_000id, 1_000_000);
     assert_eq!(1_0_0_id, 100);
 
-    // Decimal with leading zeros (still valid integer)
+    // Float with leading zeros (still valid integer)
     assert_eq!(000id, 0);
     assert_eq!(0007id, 7);
     assert_eq!(0010id, 10);
@@ -85,7 +85,7 @@ fn integer_literals() {
 
 #[test]
 #[culit]
-fn decimal() {
+fn float() {
     // With fractional, no exponent
     assert_eq!(70.0id, 70.0);
     assert_eq!(70.8id, 70.8);
@@ -196,7 +196,7 @@ mod custom_literal {
         pub(crate) use id;
     }
 
-    pub mod decimal {
+    pub mod float {
         macro_rules! id {
             ($value:literal) => {
                 $value as f32
