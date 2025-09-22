@@ -148,13 +148,13 @@
 //!
 //! |literal|expansion|
 //! |---|---|
-//! | `100km` | `crate::custom_literal::int::km!(100)` |
-//! | `70.008e7feet` | `crate::custom_literal::float::feet!(70.008e7)` |
-//! | `'a'ascii` | `crate::custom_literal::char::ascii!('a')` |
-//! | `b'a'ascii` | `crate::custom_literal::byte_char::ascii!(b'a')` |
-//! | `"foo"bar` | `crate::custom_literal::str::bar!("foo")` |
-//! | `b"foo"bar` | `crate::custom_literal::byte_str::bar!(b"foo")` |
-//! | `c"foo"bar` | `crate::custom_literal::c_str::bar!(c"foo")` |
+//! | `100km` | `crate::custom_literal::integer::km!(100)` |
+//! | `70.008e7feet` | `crate::custom_literal::decimal::feet!(70.008e7)` |
+//! | `"foo"bar` | `crate::custom_literal::string::bar!("foo")` |
+//! | `'a'ascii` | `crate::custom_literal::character::ascii!('a')` |
+//! | `b"foo"bar` | `crate::custom_literal::byte_string::bar!(b"foo")` |
+//! | `b'a'ascii` | `crate::custom_literal::byte_character::ascii!(b'a')` |
+//! | `c"foo"bar` | `crate::custom_literal::c_string::bar!(c"foo")` |
 //!
 //! Notes:
 //!
