@@ -15,7 +15,7 @@ This crate provides an attribute macro `#[culit]` for "Custom Literals". When ap
 
 ```toml
 [dependencies]
-culit = "0.2"
+culit = "0.3"
 ```
 
 Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
@@ -148,18 +148,22 @@ The possibilities are *endless!*
 ## Details
 
 `#[culit]` replaces every literal that has a custom suffix with a call to the macro
-at `crate::custom_literal::<type>::<suffix>!(...)`, for example:
+at `crate::custom_literal::<type>::<suffix>!($value)`, where `$value` is the literal with the suffix stripped:
 
-- `100km` expands to `crate::custom_literal::int::km!(100)`
-- `70.8e7feet` expands to `crate::custom_literal::float::feet!(70 8 7)`
-    - `70` is the part before the decimal
-    - `8` is the part after the decimal. If missing like in `70e8` then it defaults to `0`
-    - `7` is the exponent. If missing like in `70.0` then it defaults to `1`
-- `'a'ascii` expands to `crate::custom_literal::char::ascii!('a')`
-- `b'a'ascii` expands to `crate::custom_literal::byte_char::ascii!(97)`
-- `"foo"bar` expands to `crate::custom_literal::str::bar!("foo")`
-- `b"foo"bar` expands to `crate::custom_literal::byte_str::bar!(b"foo")`
-- `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
+|literal|expansion|
+|---|---|
+| `100km` | `crate::custom_literal::int::km!(100)` |
+| `70.008e7feet` | `crate::custom_literal::float::feet!(70.008e7)` |
+| `'a'ascii` | `crate::custom_literal::char::ascii!('a')` |
+| `b'a'ascii` | `crate::custom_literal::byte_char::ascii!(b'a')` |
+| `"foo"bar` | `crate::custom_literal::str::bar!("foo")` |
+| `b"foo"bar` | `crate::custom_literal::byte_str::bar!(b"foo")` |
+| `c"foo"bar` | `crate::custom_literal::c_str::bar!(c"foo")` |
+
+Notes:
+
+- Built-in suffixes like `usize` and `f32` do **not** expand, so you cannot overwrite them.
+- Escapes are fully processed, so there's no `raw_byte_str`. `rb#"f\oo"#` just becomes `b"f\\oo"`
 
 ### Skeleton
 
@@ -169,7 +173,6 @@ This module adds a new literal for every type of literal:
 ```rust
 mod custom_literal {
     pub mod integer {
-        // 0x100custom
         macro_rules! custom {
             ($value:literal) => {
                 // ...
@@ -179,13 +182,8 @@ mod custom_literal {
     }
 
     pub mod decimal {
-        // 70.3141e-100custom
-        //
-        // ^^ integral              70
-        //    ^^^^ fractional       3141
-        //         ^^^ exponent    -100
         macro_rules! custom {
-            ($integral:literal $fractional:literal $exponent:literal) => {
+            ($value:literal) => {
                 // ...
             }
         }
@@ -193,8 +191,6 @@ mod custom_literal {
     }
 
     pub mod string {
-        // "foo_bar"custom
-        // ^^^^^^^^^ value - "foo_bar"
         macro_rules! custom {
             ($value:literal) => {
                 // ...
@@ -204,8 +200,6 @@ mod custom_literal {
     }
 
     pub mod character {
-        // 'x'custom
-        // ^^^ value - 'x'
         macro_rules! custom {
             ($value:literal) => {
                 // ...
@@ -215,8 +209,6 @@ mod custom_literal {
     }
 
     pub mod byte_character {
-        // b'a'custom
-        //   ^ value - 97
         macro_rules! custom {
             ($value:literal) => {
                 // ...
@@ -226,8 +218,6 @@ mod custom_literal {
     }
 
     pub mod byte_string {
-        // b"foo_bar"custom
-        // ^^^^^^^^^^ value - b"foo_bar"
         macro_rules! custom {
             ($value:literal) => {
                 // ...
@@ -237,8 +227,6 @@ mod custom_literal {
     }
 
     pub mod c_string {
-        // c"string"custom
-        // ^^^^^^^^^ value - c"string"
         macro_rules! custom {
             ($value:literal) => {
                 // ...

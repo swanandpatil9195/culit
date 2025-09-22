@@ -87,53 +87,54 @@ fn integer_literals() {
 #[culit]
 fn decimal() {
     // With fractional, no exponent
-    assert_eq!(70.0id, (70, 0, 1));
-    assert_eq!(70.8id, (70, 8, 1));
-    assert_eq!(7_0.8id, (70, 8, 1));
-    assert_eq!(7_0_.8id, (70, 8, 1));
+    assert_eq!(70.0id, 70.0);
+    assert_eq!(70.8id, 70.8);
+    assert_eq!(7_0.8id, 7_0.8);
+    assert_eq!(7_0_.8id, 7_0_.8);
 
     // With exponent only
-    assert_eq!(70e7id, (70, 0, 7));
-    assert_eq!(70e-7id, (70, 0, -7));
-    assert_eq!(70e+7id, (70, 0, 7));
-    assert_eq!(7_0e7id, (70, 0, 7));
-    assert_eq!(7_0_e7id, (70, 0, 7));
-    assert_eq!(7_0_e-7id, (70, 0, -7));
+    assert_eq!(70e7id, 70e7);
+    assert_eq!(70e-7id, 70e-7);
+    assert_eq!(70e+7id, 70e+7);
+    assert_eq!(7_0e7id, 7_0e7);
+    assert_eq!(7_0_e7id, 7_0_e7);
+    assert_eq!(7_0_e-7id, 7_0_e-7);
 
     // With fractional and exponent
-    assert_eq!(70.8e7id, (70, 8, 7));
-    assert_eq!(70.8e-7id, (70, 8, -7));
-    assert_eq!(70.8e+7id, (70, 8, 7));
-    assert_eq!(7_0.8e7id, (70, 8, 7));
-    assert_eq!(7_0.8e-7id, (70, 8, -7));
-    assert_eq!(7_0.8e+7id, (70, 8, 7));
+    assert_eq!(70.8e7id, 70.8e7);
+    assert_eq!(70.8e-7id, 70.8e-7);
+    assert_eq!(70.8e+7id, 70.8e+7);
+    assert_eq!(7_0.8e7id, 7_0.8e7);
+    assert_eq!(7_0.8e-7id, 7_0.8e-7);
+    assert_eq!(7_0.8e+7id, 7_0.8e+7);
 
     // Fractional only, with underscores
-    assert_eq!(70.0id, (70, 0, 1));
-    assert_eq!(70.000id, (70, 0, 1));
-    assert_eq!(70.123id, (70, 123, 1));
-    assert_eq!(7_0.1_2_3id, (70, 123, 1));
-    assert_eq!(7_0_.0id, (70, 0, 1));
+    assert_eq!(70.0id, 70.0);
+    assert_eq!(70.000id, 70.000);
+    assert_eq!(70.123id, 70.123);
+    assert_eq!(7_0.1_2_3id, 7_0.1_2_3);
+    assert_eq!(7_0_.0id, 7_0_.0);
 
     // Fractional + exponent, underscores everywhere
-    assert_eq!(70.0e7id, (70, 0, 7));
-    assert_eq!(70.0e-7id, (70, 0, -7));
-    assert_eq!(70.0e+7id, (70, 0, 7));
-    assert_eq!(70.123e7id, (70, 123, 7));
-    assert_eq!(7_0.1_2_3e7id, (70, 123, 7));
-    assert_eq!(7_0.1_2_3e-7id, (70, 123, -7));
-    assert_eq!(7_0_.1_2_3_e_7id, (70, 123, 7));
-    assert_eq!(7_0_.0_e_7id, (70, 0, 7));
-    assert_eq!(7_0_.0_e-7id, (70, 0, -7));
-    assert_eq!(7_0_.0_e+7id, (70, 0, 7));
+    assert_eq!(70.0e7id, 70.0e7);
+    assert_eq!(70.0e-7id, 70.0e-7);
+    assert_eq!(70.0e+7id, 70.0e+7);
+    assert_eq!(70.123e7id, 70.123e7);
+    assert_eq!(7_0.1_2_3e7id, 7_0.1_2_3e7);
+    assert_eq!(7_0.1_2_3e-7id, 7_0.1_2_3e-7);
+    assert_eq!(7_0_.1_2_3_e_7id, 7_0_.1_2_3_e_7);
+    assert_eq!(7_0_.0_e_7id, 7_0_.0_e_7);
+    assert_eq!(7_0_.0_e-7id, 7_0_.0_e-7);
+    assert_eq!(7_0_.0_e+7id, 7_0_.0_e+7);
 
     // Small edge cases
-    assert_eq!(0.0id, (0, 0, 1));
-    assert_eq!(0e7id, (0, 0, 7));
-    assert_eq!(0.0e7id, (0, 0, 7));
-    assert_eq!(0.123id, (0, 123, 1));
-    assert_eq!(0.123e7id, (0, 123, 7));
-    assert_eq!(0.123e-7id, (0, 123, -7));
+    assert_eq!(0.0id, 0.0);
+    assert_eq!(0e7id, 0e7);
+    assert_eq!(0.007id, 0.007);
+    assert_eq!(0.0e7id, 0.0e7);
+    assert_eq!(0.123id, 0.123);
+    assert_eq!(0.123e7id, 0.123e7);
+    assert_eq!(0.123e-7id, 0.123e-7);
 }
 
 #[test]
@@ -149,7 +150,7 @@ fn str() {
 #[test]
 #[culit]
 fn byte_char() {
-    assert_eq!(b'a'id, stringify!(97));
+    assert_eq!(b'a'id, b'a');
 }
 
 #[test]
@@ -197,8 +198,8 @@ mod custom_literal {
 
     pub mod decimal {
         macro_rules! id {
-            ($integral:literal $fractional:literal $exponent:literal) => {
-                ($integral as i32, $fractional as i32, $exponent as i32)
+            ($value:literal) => {
+                $value as f32
             };
         }
         pub(crate) use id;
@@ -213,7 +214,12 @@ mod custom_literal {
     }
 
     pub mod byte_character {
-        pub(crate) use super::id;
+        macro_rules! id {
+            ($value:literal) => {{
+                $value
+            }};
+        }
+        pub(crate) use id;
     }
 
     pub mod byte_string {

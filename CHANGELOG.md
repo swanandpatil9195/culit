@@ -1,3 +1,11 @@
+# v0.3.0
+
+- Integers and decimals are passed as-is, without splitting them up. e.g:
+  - `100.003e7km` expands to `crate::custom_literal::decimal::km!(100.003e7)`
+  - `100km` expands to `crate::custom_literal::integer::km!(100)`
+- Byte character is also passed as-is instead of the number, e.g.: `b'a'ascii` expands to `crate::custom_literal::byte_character::ascii!(b'a')`
+- MSRV is now 1.79
+
 # v0.2.0
 
 Includes significant improvements to usability, specifically in defining custom integer and decimal literals.

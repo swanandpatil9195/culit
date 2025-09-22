@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! culit = "0.2"
+//! culit = "0.3"
 //! ```
 //!
 //! Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
@@ -144,18 +144,22 @@
 //! # Details
 //!
 //! `#[culit]` replaces every literal that has a custom suffix with a call to the macro
-//! at `crate::custom_literal::<type>::<suffix>!(...)`, for example:
+//! at `crate::custom_literal::<type>::<suffix>!($value)`, where `$value` is the literal with the suffix stripped:
 //!
-//! - `100km` expands to `crate::custom_literal::int::km!(100)`
-//! - `70.8e7feet` expands to `crate::custom_literal::float::feet!(70 8 7)`
-//!     - `70` is the part before the decimal
-//!     - `8` is the part after the decimal. If missing like in `70e8` then it defaults to `0`
-//!     - `7` is the exponent. If missing like in `70.0` then it defaults to `1`
-//! - `'a'ascii` expands to `crate::custom_literal::char::ascii!('a')`
-//! - `b'a'ascii` expands to `crate::custom_literal::byte_char::ascii!(97)`
-//! - `"foo"bar` expands to `crate::custom_literal::str::bar!("foo")`
-//! - `b"foo"bar` expands to `crate::custom_literal::byte_str::bar!(b"foo")`
-//! - `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
+//! |literal|expansion|
+//! |---|---|
+//! | `100km` | `crate::custom_literal::int::km!(100)` |
+//! | `70.008e7feet` | `crate::custom_literal::float::feet!(70.008e7)` |
+//! | `'a'ascii` | `crate::custom_literal::char::ascii!('a')` |
+//! | `b'a'ascii` | `crate::custom_literal::byte_char::ascii!(b'a')` |
+//! | `"foo"bar` | `crate::custom_literal::str::bar!("foo")` |
+//! | `b"foo"bar` | `crate::custom_literal::byte_str::bar!(b"foo")` |
+//! | `c"foo"bar` | `crate::custom_literal::c_str::bar!(c"foo")` |
+//!
+//! Notes:
+//!
+//! - Built-in suffixes like `usize` and `f32` do **not** expand, so you cannot overwrite them.
+//! - Escapes are fully processed, so there's no `raw_byte_str`. `rb#"f\oo"#` just becomes `b"f\\oo"`
 //!
 //! ## Skeleton
 //!
@@ -165,7 +169,6 @@
 //! ```
 //! mod custom_literal {
 //!     pub mod integer {
-//!         // 0x100custom
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -175,13 +178,8 @@
 //!     }
 //!
 //!     pub mod decimal {
-//!         // 70.3141e-100custom
-//!         //
-//!         // ^^ integral              70
-//!         //    ^^^^ fractional       3141
-//!         //         ^^^ exponent    -100
 //!         macro_rules! custom {
-//!             ($integral:literal $fractional:literal $exponent:literal) => {
+//!             ($value:literal) => {
 //!                 // ...
 //!             }
 //!         }
@@ -189,8 +187,6 @@
 //!     }
 //!
 //!     pub mod string {
-//!         // "foo_bar"custom
-//!         // ^^^^^^^^^ value - "foo_bar"
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -200,8 +196,6 @@
 //!     }
 //!
 //!     pub mod character {
-//!         // 'x'custom
-//!         // ^^^ value - 'x'
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -211,8 +205,6 @@
 //!     }
 //!
 //!     pub mod byte_character {
-//!         // b'a'custom
-//!         //   ^ value - 97
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -222,8 +214,6 @@
 //!     }
 //!
 //!     pub mod byte_string {
-//!         // b"foo_bar"custom
-//!         // ^^^^^^^^^^ value - b"foo_bar"
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -233,8 +223,6 @@
 //!     }
 //!
 //!     pub mod c_string {
-//!         // c"string"custom
-//!         // ^^^^^^^^^ value - c"string"
 //!         macro_rules! custom {
 //!             ($value:literal) => {
 //!                 // ...
@@ -345,34 +333,25 @@ fn transform(ts: TokenStream) -> TokenStream {
                                 );
                             }
 
-                            let Some(value) = integer_lit.value::<u128>() else {
-                                return AnonIter::I3(
-                                    CompileError::new(
-                                        span,
-                                        format!(
-                                            "custom integer literals are only supported for {} {}",
-                                            "integers who's absolute value does not exceed",
-                                            u128::MAX
-                                        ),
-                                    )
-                                    .into_iter(),
-                                );
-                            };
+                            let mut int = String::with_capacity(integer_lit.raw_input().len());
+                            int.push_str(integer_lit.base().prefix());
+                            int.push_str(integer_lit.raw_main_part());
+                            int.parse::<Literal>().expect(concat!(
+                                "if it wasn't a valid literal, `litrs::Literal`",
+                                " would not be able to parse it"
+                            ));
 
-                            let value =
-                                TokenTree::Literal(Literal::u128_unsuffixed(value)).with_span(span);
-
-                            // Token on the outside
-                            //
-                            // + crate::custom_literal::int::$suffix!($value)
-                            //
-                            // ^ current_tt (can be ANY token)
                             AnonIter::I1(
                                 expand_custom_literal(
                                     lit_name::INTEGER,
                                     suffix,
                                     span,
-                                    TokenStream::from_iter([value]),
+                                    TokenStream::from(TokenTree::Literal(
+                                        int.parse::<Literal>().expect(concat!(
+                                            "if it wasn't a valid literal, `litrs::Literal`",
+                                            " would not be able to parse it"
+                                        )),
+                                    )),
                                 )
                                 .into_iter(),
                             )
@@ -404,117 +383,17 @@ fn transform(ts: TokenStream) -> TokenStream {
                                 );
                             }
 
-                            let Ok(integral) = float_lit
-                                .integer_part()
-                                .split('_')
-                                .collect::<String>()
-                                .parse::<u128>()
-                            else {
-                                return AnonIter::I3(
-                                    CompileError::new(
-                                        span,
-                                        format!(
-                                            "custom float literals are only supported for {} {} {}",
-                                            "floats that who's integral part (before the `.`)",
-                                            "does not exceed",
-                                            u128::MAX
-                                        ),
-                                    )
-                                    .into_iter(),
-                                );
-                            };
-
-                            let Ok(fractional) = float_lit
-                                .fractional_part()
-                                .map(|it| it.split('_').collect::<String>().parse::<u128>())
-                                .unwrap_or(Ok(0))
-                            else {
-                                return AnonIter::I3(
-                                    CompileError::new(
-                                        span,
-                                        format!(
-                                            concat!(
-                                                "custom float literals are only supported for ",
-                                                "floats that who's fractional ",
-                                                "part (after the `.`) does not exceed {}"
-                                            ),
-                                            u128::MAX
-                                        ),
-                                    )
-                                    .into_iter(),
-                                );
-                            };
-
-                            let (is_negative, exponent) = match float_lit.exponent_part() {
-                                // No exponent -> n.pow(1) == n
-                                "" => (false, 1),
-                                // Has any other exponent
-                                exp => {
-                                    let first_part =
-                                        exp.get(1..).expect("first letter is `e` or `E`");
-
-                                    let without_minus = first_part.strip_prefix('-');
-                                    let is_negative = without_minus.is_some();
-                                    let without_minus = without_minus.unwrap_or(first_part);
-
-                                    // Remove '+' at the beginning
-                                    let Ok(exp) = without_minus
-                                        .strip_prefix('+')
-                                        .unwrap_or(without_minus)
-                                        .split('_')
-                                        .collect::<String>()
-                                        .parse::<u128>()
-                                    else {
-                                        return AnonIter::I3(
-                                            CompileError::new(
-                                                span,
-                                                format!(
-                                            "custom float literals are only supported for {} {}",
-                                            "floats that who's exponent does not exceed",
-                                            u128::MAX
-                                        ),
-                                            )
-                                            .into_iter(),
-                                        );
-                                    };
-                                    (is_negative, exp)
-                                }
-                            };
-
-                            // Token for the sign of the exponent
-                            //
-                            // 1e+3 is None
-                            // 1e3 is None
-                            // 1e-3 is Some(TokenTree)
-                            let exponent_sign = is_negative
-                                .then(|| TokenTree::Punct(Punct::new('-', Spacing::Joint)));
-
-                            // Whatever token on the outside
-                            //
-                            // + crate::custom_literal::decimal::$suffix!($integral $fractional $exponen)
-                            //
-                            // ^ current_tt (can be ANY token)
                             AnonIter::I1(
                                 expand_custom_literal(
                                     lit_name::DECIMAL,
                                     suffix,
                                     span,
-                                    TokenStream::from_iter(
-                                        [
-                                            TokenTree::Literal(Literal::u128_unsuffixed(integral))
-                                                .with_span(span),
-                                            TokenTree::Literal(Literal::u128_unsuffixed(
-                                                fractional,
-                                            ))
-                                            .with_span(span),
-                                        ]
-                                        .into_iter()
-                                        .chain(exponent_sign)
-                                        .chain([
-                                            TokenTree::Literal(Literal::u128_unsuffixed(exponent))
-                                                .with_span(span),
-                                        ]),
-                                    ),
+                                    TokenStream::from(TokenTree::Literal(
+                                        float_lit.number_part().parse::<Literal>().expect(concat!(
+                                            "if it wasn't a valid literal, `litrs::Literal`",
+                                            " would not be able to parse it"
+                                        )),
+                                    )),
                                 )
                                 .into_iter(),
                             )
@@ -541,7 +420,7 @@ fn transform(ts: TokenStream) -> TokenStream {
                                 span,
                                 TokenStream::from(
                                     // $value
-                                    TokenTree::Literal(Literal::u8_unsuffixed(byte_lit.value()))
+                                    TokenTree::Literal(Literal::byte_character(byte_lit.value()))
                                         .with_span(span),
                                 ),
                             )
@@ -565,23 +444,6 @@ fn transform(ts: TokenStream) -> TokenStream {
                                 .into_iter(),
                             )
                         }
-                        #[cfg(not(has_c_string))]
-                        litrs::Literal::CString(_cstring_lit) => {
-                            return AnonIter::I2(CompileError::new(
-                                tt_lit.span(),
-                                concat!(
-                                    "custom c-string literal with suffix ",
-                                    "is only supported on Rust version >=1.79"
-                                ),
-                            ))
-                            .into_iter()
-                            .collect();
-                        }
-                        // crate::custom_literal::c_str::$suffix!($value)
-                        #[cfg(has_c_string)]
-                        // lints for usage of "Literal::c_string" but we explicitly
-                        // check that we are on a version that allows it
-                        #[cfg_attr(has_c_string, allow(clippy::incompatible_msrv))]
                         litrs::Literal::CString(cstring_lit) => {
                             AnonIter::I1(
                                 expand_custom_literal(
@@ -702,7 +564,6 @@ mod lit_name {
     pub const CHARACTER: &str = "character";
     pub const BYTE_CHARACTER: &str = "byte_character";
     pub const BYTE_STRING: &str = "byte_string";
-    #[cfg(has_c_string)]
     pub const C_STRING: &str = "c_string";
 }
 

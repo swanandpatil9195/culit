@@ -1,20 +1,24 @@
 error[E0308]: mismatched types
-  --> tests/ui/error_from_inside.rs:10:5
+  --> tests/ui/error_from_inside.rs:8:1
    |
-10 |     0w;
-   |     ^^ expected `()`, found integer
+8  | #[culit]
+   | ^^^^^^^^ expected `()`, found integer
 ...
 22 |             let it: () = $value;
    |                     -- expected due to this
+   |
+   = note: this error originates in the attribute macro `culit` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0308]: mismatched types
-  --> tests/ui/error_from_inside.rs:11:5
+  --> tests/ui/error_from_inside.rs:8:1
    |
-11 |     0.0w;
-   |     ^^^^ expected `()`, found integer
+8  | #[culit]
+   | ^^^^^^^^ expected `()`, found floating-point number
 ...
 22 |             let it: () = $value;
    |                     -- expected due to this
+   |
+   = note: this error originates in the attribute macro `culit` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0308]: mismatched types
   --> tests/ui/error_from_inside.rs:12:5
@@ -29,7 +33,7 @@ error[E0308]: mismatched types
   --> tests/ui/error_from_inside.rs:13:5
    |
 13 |     b'x'w;
-   |     ^^^^^ expected `()`, found integer
+   |     ^^^^^ expected `()`, found `u8`
 ...
 22 |             let it: () = $value;
    |                     -- expected due to this
