@@ -20,12 +20,11 @@ We renamed from Float because float is too-specific to the format but decimal is
 
 - No more base, we handle that for you.
 - No more strings, you get the actual number.
-- No more requiring the expansion to output a value that implements `Neg`, as we directly include the negative sign with the literal
 
 ```rs
 10km // crate::custom_literal::integer::km!(10)
 0b10km // crate::custom_literal::integer::km!(3)
--10km // crate::custom_literal::integer::km!(-10)
+-10km // -crate::custom_literal::integer::km!(10)
 ```
 
 Limitation: The absolute value of the custom literal may not exceed `340_282_366_920_938_463_463_374_607_431_768_211_455`
@@ -33,14 +32,14 @@ Limitation: The absolute value of the custom literal may not exceed `340_282_366
 ## The signature of custom decimal literal has changed
 
 - No more strings. Fractional, integral and the exponent parts are now numbers.
-Exponent also contains the `-` sign. Integral contains `-` if the decimal is negative.
+Exponent also contains the `-` sign
 
 ```rs
 10.0km // crate::custom_literal::decimal::km!(10 0 1)
 10e7km // crate::custom_literal::decimal::km!(10 0 7)
 10e-7km // crate::custom_literal::decimal::km!(10 0 -7)
--10e-7km // crate::custom_literal::decimal::km!(-10 0 -7)
--10.4e7km // crate::custom_literal::decimal::km!(-10 4 7)
+-10e-7km // -crate::custom_literal::decimal::km!(10 0 -7)
+-10.4e7km // -crate::custom_literal::decimal::km!(10 4 7)
 ```
 
 Limitation: Each of these may not exceed `340_282_366_920_938_463_463_374_607_431_768_211_455`:
