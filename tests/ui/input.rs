@@ -3,7 +3,7 @@
 use culit::culit;
 
 mod custom_literal {
-    pub mod int {}
+    pub mod integer {}
 }
 
 #[culit(no input allowed)]

@@ -25,31 +25,31 @@ mod custom_literal {
     }
     pub(crate) use w;
 
-    pub mod int {
+    pub mod integer {
         pub(crate) use super::w;
     }
 
-    pub mod float {
+    pub mod decimal {
         pub(crate) use super::w;
     }
 
-    pub mod str {
+    pub mod string {
         pub(crate) use super::w;
     }
 
-    pub mod char {
+    pub mod character {
         pub(crate) use super::w;
     }
 
-    pub mod byte_char {
+    pub mod byte_character {
         pub(crate) use super::w;
     }
 
-    pub mod byte_str {
+    pub mod byte_string {
         pub(crate) use super::w;
     }
 
-    pub mod c_str {
+    pub mod c_string {
         pub(crate) use super::w;
     }
 }

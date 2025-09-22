@@ -1,3 +1,7 @@
+#![allow(clippy::unusual_byte_groupings, clippy::inconsistent_digit_grouping)]
+#![allow(clippy::zero_prefixed_literal)]
+#![allow(clippy::mixed_case_hex_literals)]
+
 use culit::culit;
 
 #[test]
@@ -8,39 +12,128 @@ fn ui() {
 
 #[test]
 #[culit]
-fn int() {
-    assert_eq!(0b100id, stringify!("100" 2));
-    assert_eq!(0o100id, stringify!("100" 8));
-    assert_eq!(100id, stringify!("100" 10));
-    assert_eq!(0x100id, stringify!("100" 16));
+fn integer_literals() {
+    // Binary no undescrore
+    assert_eq!(0b1id, 1);
+    assert_eq!(0b10id, 2);
+    assert_eq!(0b100id, 4);
+    assert_eq!(0b1111id, 15);
 
-    assert_eq!(0b100_id, stringify!("100" 2));
-    assert_eq!(0o100_id, stringify!("100" 8));
-    assert_eq!(100_id, stringify!("100" 10));
-    assert_eq!(0x100_id, stringify!("100" 16));
+    // Binary with underscores
+    assert_eq!(0b1_0_0id, 4);
+    assert_eq!(0b_1_0_0id, 4);
+    assert_eq!(0b1_111_000id, 120);
+    assert_eq!(0b_1_111_000_id, 120);
 
-    assert_eq!(0b1_00id, stringify!("100" 2));
-    assert_eq!(0o_1_00id, stringify!("100" 8));
-    assert_eq!(1_00id, stringify!("100" 10));
-    assert_eq!(0x1_00id, stringify!("100" 16));
+    // Octal no underscore
+    assert_eq!(0o7id, 7);
+    assert_eq!(0o10id, 8);
+    assert_eq!(0o100id, 64);
+    assert_eq!(0o777id, 511);
 
-    assert_eq!(0b_1_0_0_id, stringify!("100" 2));
-    assert_eq!(0o_1_0_0_id, stringify!("100" 8));
-    assert_eq!(1_0_0_id, stringify!("100" 10));
-    assert_eq!(0x_1_0_0_id, stringify!("100" 16));
+    // Octal with underscores
+    assert_eq!(0o1_0_0id, 64);
+    assert_eq!(0o_1_0_0id, 64);
+    assert_eq!(0o7_7_7id, 511);
+    assert_eq!(0o_7_7_7_id, 511);
+
+    // Decimal no underscore
+    assert_eq!(0id, 0);
+    assert_eq!(1id, 1);
+    assert_eq!(10id, 10);
+    assert_eq!(100id, 100);
+    assert_eq!(999id, 999);
+
+    // Decimal with underscores
+    assert_eq!(1_0_0id, 100);
+    assert_eq!(1_000id, 1000);
+    assert_eq!(9_9_9id, 999);
+    assert_eq!(1_000_000id, 1_000_000);
+    assert_eq!(1_0_0_id, 100);
+
+    // Decimal with leading zeros (still valid integer)
+    assert_eq!(000id, 0);
+    assert_eq!(0007id, 7);
+    assert_eq!(0010id, 10);
+
+    // Hexadecimal no undescore
+    assert_eq!(0x1id, 1);
+    assert_eq!(0x10id, 16);
+    assert_eq!(0x100id, 256);
+    assert_eq!(0xABCid, 0xABC);
+    assert_eq!(0xabcid, 0xabc);
+    assert_eq!(0xDEAD_BEEFid, 0xDEADBEEF);
+
+    // Hexadecimal with underscores
+    assert_eq!(0x1_0_0id, 256);
+    assert_eq!(0x_1_0_0id, 256);
+    assert_eq!(0xAB_CDid, 0xABCD);
+    assert_eq!(0xA_B_CDid, 0xABCD);
+    assert_eq!(0x_ABC_D_id, 0xABCD);
+
+    // edge cases for 0
+    assert_eq!(0b0id, 0);
+    assert_eq!(0o0id, 0);
+    assert_eq!(0x0id, 0);
+
+    // Large numbers with separators
+    assert_eq!(1_000_000_000id, 1_000_000_000);
+    assert_eq!(0b1111_1111_1111_1111id, 0xFFFF);
+    assert_eq!(0o7_7_7_7id, 0o7777);
+    assert_eq!(0xFFFF_FFFFid, 0xFFFFFFFF);
 }
 
 #[test]
 #[culit]
-fn float() {
-    assert_eq!(70.8e7id, stringify!("70" "8" "e7"));
-    assert_eq!(70e7id, stringify!("70" "" "e7"));
-    assert_eq!(70.0id, stringify!("70" "0" ""));
-    assert_eq!(70.0e7id, stringify!("70" "0" "e7"));
-    assert_eq!(70.0_e7id, stringify!("70" "0" "e7"));
-    assert_eq!(7_0.0e7id, stringify!("70" "0" "e7"));
-    assert_eq!(7_0.0e7_id, stringify!("70" "0" "e7"));
-    assert_eq!(7_0_.0_e_7_id, stringify!("70" "0" "e7"));
+fn decimal() {
+    // With fractional, no exponent
+    assert_eq!(70.0id, (70, 0, 1));
+    assert_eq!(70.8id, (70, 8, 1));
+    assert_eq!(7_0.8id, (70, 8, 1));
+    assert_eq!(7_0_.8id, (70, 8, 1));
+
+    // With exponent only
+    assert_eq!(70e7id, (70, 0, 7));
+    assert_eq!(70e-7id, (70, 0, -7));
+    assert_eq!(70e+7id, (70, 0, 7));
+    assert_eq!(7_0e7id, (70, 0, 7));
+    assert_eq!(7_0_e7id, (70, 0, 7));
+    assert_eq!(7_0_e-7id, (70, 0, -7));
+
+    // With fractional and exponent
+    assert_eq!(70.8e7id, (70, 8, 7));
+    assert_eq!(70.8e-7id, (70, 8, -7));
+    assert_eq!(70.8e+7id, (70, 8, 7));
+    assert_eq!(7_0.8e7id, (70, 8, 7));
+    assert_eq!(7_0.8e-7id, (70, 8, -7));
+    assert_eq!(7_0.8e+7id, (70, 8, 7));
+
+    // Fractional only, with underscores
+    assert_eq!(70.0id, (70, 0, 1));
+    assert_eq!(70.000id, (70, 0, 1));
+    assert_eq!(70.123id, (70, 123, 1));
+    assert_eq!(7_0.1_2_3id, (70, 123, 1));
+    assert_eq!(7_0_.0id, (70, 0, 1));
+
+    // Fractional + exponent, underscores everywhere
+    assert_eq!(70.0e7id, (70, 0, 7));
+    assert_eq!(70.0e-7id, (70, 0, -7));
+    assert_eq!(70.0e+7id, (70, 0, 7));
+    assert_eq!(70.123e7id, (70, 123, 7));
+    assert_eq!(7_0.1_2_3e7id, (70, 123, 7));
+    assert_eq!(7_0.1_2_3e-7id, (70, 123, -7));
+    assert_eq!(7_0_.1_2_3_e_7id, (70, 123, 7));
+    assert_eq!(7_0_.0_e_7id, (70, 0, 7));
+    assert_eq!(7_0_.0_e-7id, (70, 0, -7));
+    assert_eq!(7_0_.0_e+7id, (70, 0, 7));
+
+    // Small edge cases
+    assert_eq!(0.0id, (0, 0, 1));
+    assert_eq!(0e7id, (0, 0, 7));
+    assert_eq!(0.0e7id, (0, 0, 7));
+    assert_eq!(0.123id, (0, 123, 1));
+    assert_eq!(0.123e7id, (0, 123, 7));
+    assert_eq!(0.123e-7id, (0, 123, -7));
 }
 
 #[test]
@@ -93,31 +186,41 @@ mod custom_literal {
 
     pub(crate) use id;
 
-    pub mod int {
+    pub mod integer {
+        macro_rules! id {
+            ($value:literal) => {{
+                $value as i64
+            }};
+        }
+        pub(crate) use id;
+    }
+
+    pub mod decimal {
+        macro_rules! id {
+            ($integral:literal $fractional:literal $exponent:literal) => {
+                ($integral as i32, $fractional as i32, $exponent as i32)
+            };
+        }
+        pub(crate) use id;
+    }
+
+    pub mod string {
         pub(crate) use super::id;
     }
 
-    pub mod float {
+    pub mod character {
         pub(crate) use super::id;
     }
 
-    pub mod str {
+    pub mod byte_character {
         pub(crate) use super::id;
     }
 
-    pub mod char {
+    pub mod byte_string {
         pub(crate) use super::id;
     }
 
-    pub mod byte_char {
-        pub(crate) use super::id;
-    }
-
-    pub mod byte_str {
-        pub(crate) use super::id;
-    }
-
-    pub mod c_str {
+    pub mod c_string {
         pub(crate) use super::id;
     }
 }

@@ -32,14 +32,14 @@
 //! }
 //!
 //! mod custom_literal {
-//!     pub mod int {
+//!     pub mod integer {
 //!         macro_rules! nzusize {
 //!             // handle `0` specially
-//!             ("0" $base:literal) => {
+//!             (0) => {
 //!                 compile_error!("`0` is not a valid `NonZeroUsize`")
 //!             };
-//!             ($value:literal $base:literal) => {
-//!                 NonZeroUsize::new(usize::from_str_radix($value, $base).unwrap()).unwrap()
+//!             ($value:literal) => {
+//!                 const { NonZeroUsize::new($value).unwrap() }
 //!             };
 //!         }
 //!         pub(crate) use nzusize;
@@ -74,7 +74,7 @@
 //! }
 //!
 //! mod custom_literal {
-//!     pub mod str {
+//!     pub mod string {
 //!         macro_rules! f {
 //!             ($value:literal) => {
 //!                 format!($value)
@@ -103,35 +103,35 @@
 //! }
 //!
 //! mod custom_literal {
-//!     pub mod int {
+//!     pub mod integer {
 //!         // day
 //!         macro_rules! d {
-//!             ($value:literal $base:literal) => {
-//!                 Duration::from_secs(60 * 60 * 24 * u64::from_str_radix($value, $base).unwrap())
+//!             ($value:literal) => {
+//!                 Duration::from_secs(60 * 60 * 24 * $value)
 //!             };
 //!         }
 //!         pub(crate) use d;
 //!
 //!         // hour
 //!         macro_rules! h {
-//!             ($value:literal $base:literal) => {
-//!                 Duration::from_secs(60 * 60 * u64::from_str_radix($value, $base).unwrap())
+//!             ($value:literal) => {
+//!                 Duration::from_secs(60 * 60 * $value)
 //!             };
 //!         }
 //!         pub(crate) use h;
 //!
 //!         // minute
 //!         macro_rules! m {
-//!             ($value:literal $base:literal) => {
-//!                 Duration::from_secs(60 * u64::from_str_radix($value, $base).unwrap())
+//!             ($value:literal) => {
+//!                 Duration::from_secs(60 * $value)
 //!             };
 //!         }
 //!         pub(crate) use m;
 //!
 //!         // second
 //!         macro_rules! s {
-//!             ($value:literal $base:literal) => {
-//!                 Duration::from_secs(u64::from_str_radix($value, $base).unwrap())
+//!             ($value:literal) => {
+//!                 Duration::from_secs($value)
 //!             };
 //!         }
 //!         pub(crate) use s;
@@ -143,35 +143,19 @@
 //!
 //! # Details
 //!
-//! `#[culit]` recursively replaces every literal that has a non-standard suffix with a call to the macro
+//! `#[culit]` replaces every literal that has a custom suffix with a call to the macro
 //! at `crate::custom_literal::<type>::<suffix>!(...)`, for example:
 //!
-//! - `100km` expands to `crate::custom_literal::int::km!("100" 10)`
-//!     - `"100"` is the value
-//!     - `10` is the base (decimal)
-//! - `70.8e7feet` expands to `crate::custom_literal::float::feet!("70" "8" "e7")`
-//!     - `"70"` is the part before the decimal
-//!     - `"8"` is the part after the decimal
-//!     - `"e7"` is the exponent
+//! - `100km` expands to `crate::custom_literal::int::km!(100)`
+//! - `70.8e7feet` expands to `crate::custom_literal::float::feet!(70 8 7)`
+//!     - `70` is the part before the decimal
+//!     - `8` is the part after the decimal. If missing like in `70e8` then it defaults to `0`
+//!     - `7` is the exponent. If missing like in `70.0` then it defaults to `1`
 //! - `'a'ascii` expands to `crate::custom_literal::char::ascii!('a')`
 //! - `b'a'ascii` expands to `crate::custom_literal::byte_char::ascii!(97)`
 //! - `"foo"bar` expands to `crate::custom_literal::str::bar!("foo")`
 //! - `b"foo"bar` expands to `crate::custom_literal::byte_str::bar!(b"foo")`
 //! - `c"foo"bar` expands to `crate::custom_literal::c_str::bar!(c"foo")`
-//!
-//! ## Negative literals
-//!
-//! Whatever the macros in `custom_literal::float` or `custom_literal::int` expand to needs to implement the [`Neg`](std::ops::Neg) trait in order to allow using `-` with the custom numeric literals.
-//!
-//! ### Details on negative literals
-//!
-//! You might think that a number like `-100` is a single literal, but it is not. It is 2 tokens: a punctuation `,` followed by a literal `100`. `-100km` expands like this:
-//! - `-` is a punctuation, it is kept as-is
-//! - `100km` is a literal `100` with suffix `km`. It expands to `crate::custom_literal::int::km!("100" 10)`.
-//! - `"100"` is string representation of the number, `10` is the base (which could also be `2`, `8` or `16`)
-//! - The macro receives a string `"100"` instead of an integer `100` because procedural macros cannot create integer literals that are larger than `u128`, but we want to support integer literals of arbitrary size.
-//! - More importantly, interpreting the number itself without the base is a logic error, so passing a string instead of integer makes it far less likely that you'll make mistakes
-//! - `-100km` overall expands to `-crate::custom_literal::int::km!("100" 10)`. Notice the `-` at the beginning, it is kept the same. Whatever `km!` expands to needs to implement the [`Neg`](std::ops::Neg) trait to be able to be used with the `-` operator.
 //!
 //! ## Skeleton
 //!
@@ -180,34 +164,31 @@
 //!
 //! ```
 //! mod custom_literal {
-//!     pub mod int {
+//!     pub mod integer {
 //!         // 0x100custom
-//!         //
-//!         // ^^ base - `16`. Can be one of: 16, 10, 8 or 2
-//!         //   ^^^ value - "100"
 //!         macro_rules! custom {
-//!             ($value:literal $base:literal) => {
+//!             ($value:literal) => {
 //!                 // ...
 //!             }
 //!         }
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod float {
-//!         // 70.3141e100custom
+//!     pub mod decimal {
+//!         // 70.3141e-100custom
 //!         //
-//!         // ^^ before_decimal - "70"
-//!         //    ^^^^ after_decimal - "3141". Can be "" if no after_decimal
-//!         //         ^^^ exponent - "100". Can be "" if no exponent
+//!         // ^^ integral              70
+//!         //    ^^^^ fractional       3141
+//!         //         ^^^ exponent    -100
 //!         macro_rules! custom {
-//!             ($before_decimal:literal $after_decimal:literal $exponent:literal) => {
+//!             ($integral:literal $fractional:literal $exponent:literal) => {
 //!                 // ...
 //!             }
 //!         }
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod str {
+//!     pub mod string {
 //!         // "foo_bar"custom
 //!         // ^^^^^^^^^ value - "foo_bar"
 //!         macro_rules! custom {
@@ -218,7 +199,7 @@
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod char {
+//!     pub mod character {
 //!         // 'x'custom
 //!         // ^^^ value - 'x'
 //!         macro_rules! custom {
@@ -229,7 +210,7 @@
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod byte_char {
+//!     pub mod byte_character {
 //!         // b'a'custom
 //!         //   ^ value - 97
 //!         macro_rules! custom {
@@ -240,7 +221,7 @@
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod byte_str {
+//!     pub mod byte_string {
 //!         // b"foo_bar"custom
 //!         // ^^^^^^^^^^ value - b"foo_bar"
 //!         macro_rules! custom {
@@ -251,7 +232,7 @@
 //!         pub(crate) use custom;
 //!     }
 //!
-//!     pub mod c_str {
+//!     pub mod c_string {
 //!         // c"string"custom
 //!         // ^^^^^^^^^ value - c"string"
 //!         macro_rules! custom {
@@ -291,10 +272,10 @@ use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenSt
 /// struct Kilometers(u32);
 ///
 /// mod custom_literal {
-///     pub mod int {
+///     pub mod integer {
 ///         macro_rules! km {
-///             ($value:literal $base:literal) => {
-///                 $crate::Kilometers(u32::from_str_radix($value, $base).unwrap())
+///             ($value:literal) => {
+///                 $crate::Kilometers($value)
 ///             }
 ///         }
 ///         pub(crate) use km;
@@ -321,6 +302,10 @@ pub fn culit(args: TokenStream, input: TokenStream) -> TokenStream {
 fn transform(ts: TokenStream) -> TokenStream {
     ts.into_iter()
         .flat_map(|tt| {
+            // I1 = [TokenTree; 12]
+            // I2 = [TokenTree; 1]
+            // I3 = [TokenTree; 3]
+
             match tt {
                 TokenTree::Literal(tt_lit) => {
                     let span = tt_lit.span();
@@ -335,7 +320,8 @@ fn transform(ts: TokenStream) -> TokenStream {
                     let suffix = lit.suffix();
 
                     if suffix.is_empty() {
-                        return TokenStream::from(TokenTree::Literal(tt_lit));
+                        // Totally skip this literal as there's no suffix
+                        return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
                     }
 
                     const RESERVED_MESSAGE: &str = concat!(
@@ -346,136 +332,248 @@ fn transform(ts: TokenStream) -> TokenStream {
                     );
 
                     match &lit {
-                        litrs::Literal::Bool(_bool_lit) => {
-                            unreachable!(
-                                "booleans aren't `TokenTree::Literal`, they're `TokenTree::Ident`"
-                            )
-                        }
                         litrs::Literal::Integer(integer_lit) => {
                             if INT_SUFFIXES.contains(&suffix) {
-                                return TokenStream::from(TokenTree::Literal(tt_lit));
+                                return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
                             } else if INT_SUFFIXES_RESERVED.contains(&suffix) {
-                                return CompileError::new(
-                                    span,
-                                    format!("suffix {suffix} {RESERVED_MESSAGE}"),
-                                )
-                                .into_iter()
-                                .collect();
+                                return AnonIter::I3(
+                                    CompileError::new(
+                                        span,
+                                        format!("suffix {suffix} {RESERVED_MESSAGE}"),
+                                    )
+                                    .into_iter(),
+                                );
                             }
 
-                            // crate::custom_literal::int::$suffix!($value, $base)
-                            expand_custom_literal(
-                                lit_name::INT,
-                                suffix,
-                                span,
-                                TokenStream::from_iter([
-                                    // $value
-                                    TokenTree::Literal(Literal::string(
-                                        &integer_lit.raw_main_part().split('_').collect::<String>(),
-                                    ))
-                                    .with_span(span),
-                                    // $base
-                                    TokenTree::Literal(Literal::u8_unsuffixed(
-                                        integer_lit.base().value(),
-                                    ))
-                                    .with_span(span),
-                                ]),
+                            let Some(value) = integer_lit.value::<u128>() else {
+                                return AnonIter::I3(
+                                    CompileError::new(
+                                        span,
+                                        format!(
+                                            "custom integer literals are only supported for {} {}",
+                                            "integers who's absolute value does not exceed",
+                                            u128::MAX
+                                        ),
+                                    )
+                                    .into_iter(),
+                                );
+                            };
+
+                            let value =
+                                TokenTree::Literal(Literal::u128_unsuffixed(value)).with_span(span);
+
+                            // Token on the outside
+                            //
+                            // + crate::custom_literal::int::$suffix!($value)
+                            //
+                            // ^ current_tt (can be ANY token)
+                            AnonIter::I1(
+                                expand_custom_literal(
+                                    lit_name::INTEGER,
+                                    suffix,
+                                    span,
+                                    TokenStream::from_iter([value]),
+                                )
+                                .into_iter(),
                             )
                         }
-                        litrs::Literal::Float(float_lit) => {
-                            if FLOAT_SUFFIXES.contains(&suffix) {
-                                return TokenStream::from(TokenTree::Literal(tt_lit));
-                            }
-                            if FLOAT_SUFFIXES_RESERVED.contains(&suffix) {
-                                return CompileError::new(
-                                    span,
-                                    format!("suffix {suffix} {RESERVED_MESSAGE}"),
-                                )
-                                .into_iter()
-                                .collect();
-                            }
-
-                            // crate::custom_literal::float::$suffix!($before_decimal $after_decimal $exponent)
+                        // crate::custom_literal::str::$suffix!($value)
+                        litrs::Literal::String(string_lit) => AnonIter::I1(
                             expand_custom_literal(
-                                lit_name::FLOAT,
+                                lit_name::STRING,
                                 suffix,
                                 span,
-                                TokenStream::from_iter([
-                                    // $before_decimal
-                                    TokenTree::Literal(Literal::string(
-                                        &float_lit.integer_part().split('_').collect::<String>(),
-                                    ))
-                                    .with_span(span),
-                                    // $after_decimal
-                                    TokenTree::Literal(Literal::string(
-                                        &float_lit
-                                            .fractional_part()
-                                            .unwrap_or_default()
-                                            .split('_')
-                                            .collect::<String>(),
-                                    ))
-                                    .with_span(span),
-                                    // $exponent
-                                    TokenTree::Literal(Literal::string(
-                                        &float_lit.exponent_part().split('_').collect::<String>(),
-                                    ))
-                                    .with_span(span),
-                                ]),
+                                TokenStream::from(
+                                    // $value
+                                    TokenTree::Literal(Literal::string(string_lit.value()))
+                                        .with_span(span),
+                                ),
+                            )
+                            .into_iter(),
+                        ),
+                        litrs::Literal::Float(float_lit) => {
+                            if FLOAT_SUFFIXES.contains(&suffix) {
+                                return AnonIter::I2([TokenTree::Literal(tt_lit)].into_iter());
+                            } else if FLOAT_SUFFIXES_RESERVED.contains(&suffix) {
+                                return AnonIter::I3(
+                                    CompileError::new(
+                                        span,
+                                        format!("suffix {suffix} {RESERVED_MESSAGE}"),
+                                    )
+                                    .into_iter(),
+                                );
+                            }
+
+                            let Ok(integral) = float_lit
+                                .integer_part()
+                                .split('_')
+                                .collect::<String>()
+                                .parse::<u128>()
+                            else {
+                                return AnonIter::I3(
+                                    CompileError::new(
+                                        span,
+                                        format!(
+                                            "custom float literals are only supported for {} {} {}",
+                                            "floats that who's integral part (before the `.`)",
+                                            "does not exceed",
+                                            u128::MAX
+                                        ),
+                                    )
+                                    .into_iter(),
+                                );
+                            };
+
+                            let Ok(fractional) = float_lit
+                                .fractional_part()
+                                .map(|it| it.split('_').collect::<String>().parse::<u128>())
+                                .unwrap_or(Ok(0))
+                            else {
+                                return AnonIter::I3(
+                                    CompileError::new(
+                                        span,
+                                        format!(
+                                            concat!(
+                                                "custom float literals are only supported for ",
+                                                "floats that who's fractional ",
+                                                "part (after the `.`) does not exceed {}"
+                                            ),
+                                            u128::MAX
+                                        ),
+                                    )
+                                    .into_iter(),
+                                );
+                            };
+
+                            let (is_negative, exponent) = match float_lit.exponent_part() {
+                                // No exponent -> n.pow(1) == n
+                                "" => (false, 1),
+                                // Has any other exponent
+                                exp => {
+                                    let first_part =
+                                        exp.get(1..).expect("first letter is `e` or `E`");
+
+                                    let without_minus = first_part.strip_prefix('-');
+                                    let is_negative = without_minus.is_some();
+                                    let without_minus = without_minus.unwrap_or(first_part);
+
+                                    // Remove '+' at the beginning
+                                    let Ok(exp) = without_minus
+                                        .strip_prefix('+')
+                                        .unwrap_or(without_minus)
+                                        .split('_')
+                                        .collect::<String>()
+                                        .parse::<u128>()
+                                    else {
+                                        return AnonIter::I3(
+                                            CompileError::new(
+                                                span,
+                                                format!(
+                                            "custom float literals are only supported for {} {}",
+                                            "floats that who's exponent does not exceed",
+                                            u128::MAX
+                                        ),
+                                            )
+                                            .into_iter(),
+                                        );
+                                    };
+                                    (is_negative, exp)
+                                }
+                            };
+
+                            // Token for the sign of the exponent
+                            //
+                            // 1e+3 is None
+                            // 1e3 is None
+                            // 1e-3 is Some(TokenTree)
+                            let exponent_sign = is_negative
+                                .then(|| TokenTree::Punct(Punct::new('-', Spacing::Joint)));
+
+                            // Whatever token on the outside
+                            //
+                            // + crate::custom_literal::decimal::$suffix!($integral $fractional $exponen)
+                            //
+                            // ^ current_tt (can be ANY token)
+                            AnonIter::I1(
+                                expand_custom_literal(
+                                    lit_name::DECIMAL,
+                                    suffix,
+                                    span,
+                                    TokenStream::from_iter(
+                                        [
+                                            TokenTree::Literal(Literal::u128_unsuffixed(integral))
+                                                .with_span(span),
+                                            TokenTree::Literal(Literal::u128_unsuffixed(
+                                                fractional,
+                                            ))
+                                            .with_span(span),
+                                        ]
+                                        .into_iter()
+                                        .chain(exponent_sign)
+                                        .chain([
+                                            TokenTree::Literal(Literal::u128_unsuffixed(exponent))
+                                                .with_span(span),
+                                        ]),
+                                    ),
+                                )
+                                .into_iter(),
                             )
                         }
                         // crate::custom_literal::char::$suffix!($value)
-                        litrs::Literal::Char(char_lit) => expand_custom_literal(
-                            lit_name::CHAR,
-                            suffix,
-                            span,
-                            TokenStream::from(
-                                // $value
-                                TokenTree::Literal(Literal::character(char_lit.value()))
-                                    .with_span(span),
-                            ),
+                        litrs::Literal::Char(char_lit) => AnonIter::I1(
+                            expand_custom_literal(
+                                lit_name::CHARACTER,
+                                suffix,
+                                span,
+                                TokenStream::from(
+                                    // $value
+                                    TokenTree::Literal(Literal::character(char_lit.value()))
+                                        .with_span(span),
+                                ),
+                            )
+                            .into_iter(),
                         ),
                         // crate::custom_literal::byte_char::$suffix!($value)
-                        litrs::Literal::Byte(byte_lit) => expand_custom_literal(
-                            lit_name::BYTE_CHAR,
-                            suffix,
-                            span,
-                            TokenStream::from(
-                                // $value
-                                TokenTree::Literal(Literal::u8_unsuffixed(byte_lit.value()))
-                                    .with_span(span),
-                            ),
-                        ),
-                        // crate::custom_literal::str::$suffix!($value)
-                        litrs::Literal::String(string_lit) => expand_custom_literal(
-                            lit_name::STR,
-                            suffix,
-                            span,
-                            TokenStream::from(
-                                // $value
-                                TokenTree::Literal(Literal::string(string_lit.value()))
-                                    .with_span(span),
-                            ),
+                        litrs::Literal::Byte(byte_lit) => AnonIter::I1(
+                            expand_custom_literal(
+                                lit_name::BYTE_CHARACTER,
+                                suffix,
+                                span,
+                                TokenStream::from(
+                                    // $value
+                                    TokenTree::Literal(Literal::u8_unsuffixed(byte_lit.value()))
+                                        .with_span(span),
+                                ),
+                            )
+                            .into_iter(),
                         ),
                         // crate::custom_literal::byte_str::$suffix!($value)
-                        litrs::Literal::ByteString(byte_string_lit) => expand_custom_literal(
-                            lit_name::BYTE_STR,
-                            suffix,
-                            span,
-                            TokenStream::from(
-                                // $value
-                                TokenTree::Literal(Literal::byte_string(byte_string_lit.value()))
-                                    .with_span(span),
-                            ),
-                        ),
+                        litrs::Literal::ByteString(byte_string_lit) => {
+                            AnonIter::I1(
+                                expand_custom_literal(
+                                    lit_name::BYTE_STRING,
+                                    suffix,
+                                    span,
+                                    TokenStream::from(
+                                        // $value
+                                        TokenTree::Literal(Literal::byte_string(
+                                            byte_string_lit.value(),
+                                        ))
+                                        .with_span(span),
+                                    ),
+                                )
+                                .into_iter(),
+                            )
+                        }
                         #[cfg(not(has_c_string))]
                         litrs::Literal::CString(_cstring_lit) => {
-                            return CompileError::new(
+                            return AnonIter::I2(CompileError::new(
                                 tt_lit.span(),
                                 concat!(
                                     "custom c-string literal with suffix ",
                                     "is only supported on Rust version >=1.79"
                                 ),
-                            )
+                            ))
                             .into_iter()
                             .collect();
                         }
@@ -484,24 +582,39 @@ fn transform(ts: TokenStream) -> TokenStream {
                         // lints for usage of "Literal::c_string" but we explicitly
                         // check that we are on a version that allows it
                         #[cfg_attr(has_c_string, allow(clippy::incompatible_msrv))]
-                        litrs::Literal::CString(cstring_lit) => expand_custom_literal(
-                            lit_name::C_STR,
-                            suffix,
-                            span,
-                            TokenStream::from(
-                                // $value
-                                TokenTree::Literal(Literal::c_string(cstring_lit.value()))
-                                    .with_span(span),
-                            ),
-                        ),
+                        litrs::Literal::CString(cstring_lit) => {
+                            AnonIter::I1(
+                                expand_custom_literal(
+                                    lit_name::C_STRING,
+                                    suffix,
+                                    span,
+                                    TokenStream::from(
+                                        // $value
+                                        TokenTree::Literal(Literal::c_string(cstring_lit.value()))
+                                            .with_span(span),
+                                    ),
+                                )
+                                .into_iter(),
+                            )
+                        }
+                        litrs::Literal::Bool(_bool_lit) => {
+                            unreachable!(
+                                "booleans aren't `TokenTree::Literal`, they're `TokenTree::Ident`"
+                            )
+                        }
                     }
                 }
-                TokenTree::Group(group) => TokenStream::from(TokenTree::Group(Group::new(
-                    group.delimiter(),
-                    // Recurse
-                    transform(group.stream()),
-                ))),
-                tt => TokenStream::from(tt),
+                TokenTree::Group(group) => {
+                    AnonIter::I2(
+                        [TokenTree::Group(Group::new(
+                            group.delimiter(),
+                            // Recurse
+                            transform(group.stream()),
+                        ))]
+                        .into_iter(),
+                    )
+                }
+                next_tt => AnonIter::I2([next_tt].into_iter()),
             }
         })
         .collect()
@@ -513,8 +626,8 @@ fn expand_custom_literal(
     suffix: &str,
     span: Span,
     ts: TokenStream,
-) -> TokenStream {
-    TokenStream::from_iter([
+) -> [TokenTree; 12] {
+    [
         TokenTree::Ident(Ident::new("crate", Span::call_site())),
         TokenTree::Punct(Punct::new(':', Spacing::Joint)),
         TokenTree::Punct(Punct::new(':', Spacing::Joint)),
@@ -527,7 +640,7 @@ fn expand_custom_literal(
         TokenTree::Ident(Ident::new(suffix, span)),
         TokenTree::Punct(Punct::new('!', Spacing::Joint)).with_span(span),
         TokenTree::Group(Group::new(proc_macro::Delimiter::Parenthesis, ts)).with_span(span),
-    ])
+    ]
 }
 
 /// `.into_iter()` generates `compile_error!($message)` at `$span`
@@ -583,14 +696,14 @@ impl TokenTreeExt for TokenTree {
 
 /// Name of modules for all literal types
 mod lit_name {
-    pub const INT: &str = "int";
-    pub const FLOAT: &str = "float";
-    pub const STR: &str = "str";
-    pub const CHAR: &str = "char";
-    pub const BYTE_CHAR: &str = "byte_char";
-    pub const BYTE_STR: &str = "byte_str";
+    pub const INTEGER: &str = "integer";
+    pub const DECIMAL: &str = "decimal";
+    pub const STRING: &str = "string";
+    pub const CHARACTER: &str = "character";
+    pub const BYTE_CHARACTER: &str = "byte_character";
+    pub const BYTE_STRING: &str = "byte_string";
     #[cfg(has_c_string)]
-    pub const C_STR: &str = "c_str";
+    pub const C_STRING: &str = "c_string";
 }
 
 // NOTE: Adding or modifying the constants is a BREAKING CHANGE
@@ -610,3 +723,34 @@ const FLOAT_SUFFIXES: &[&str] = &["f32", "f64"];
 
 /// Float suffixes currently not accepted, but could be in the future
 const FLOAT_SUFFIXES_RESERVED: &[&str] = &["f16", "f128"];
+
+/// Wraps many `impl Iterator` which may be of different types
+///
+/// Functions returning `-> impl Iterator` must have the same return type
+/// from all branches, but this is overly restrictive.
+///
+/// We may want to return 2 or more different iterators from the same function,
+/// and this type allows that by wrapping each unique iterator in a variant of
+/// this enum.
+enum AnonIter<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>, I3: Iterator<Item = T>> {
+    /// The first `impl Iterator`
+    I1(I1),
+    /// The second `impl Iterator`
+    I2(I2),
+    /// The third `impl Iterator`
+    I3(I3),
+}
+
+impl<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>, I3: Iterator<Item = T>> Iterator
+    for AnonIter<T, I1, I2, I3>
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            AnonIter::I1(i1) => i1.next(),
+            AnonIter::I2(i2) => i2.next(),
+            AnonIter::I3(i3) => i3.next(),
+        }
+    }
+}
