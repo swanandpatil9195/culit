@@ -525,10 +525,15 @@ impl CompileError {
 
 impl IntoIterator for CompileError {
     type Item = TokenTree;
-    type IntoIter = std::array::IntoIter<Self::Item, 3>;
+    type IntoIter = std::array::IntoIter<Self::Item, 8>;
 
     fn into_iter(self) -> Self::IntoIter {
         [
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+            TokenTree::Ident(Ident::new("core", self.span)),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
             TokenTree::Ident(Ident::new("compile_error", self.span)),
             TokenTree::Punct(Punct::new('!', Spacing::Alone)).with_span(self.span),
             TokenTree::Group(Group::new(Delimiter::Brace, {
