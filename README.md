@@ -15,7 +15,7 @@ This crate provides an attribute macro `#[culit]` for "Custom Literals". When ap
 
 ```toml
 [dependencies]
-culit = "0.3"
+culit = "0.4"
 ```
 
 Note: `culit` does not have any dependencies such as `syn` or `quote`, and it is a simple mapping `SourceCode -> SourceCode`, so compile-speeds will be very fast.
@@ -153,7 +153,7 @@ at `crate::custom_literal::<type>::<suffix>!($value)`, where `$value` is the lit
 |literal|expansion|
 |---|---|
 | `100km` | `crate::custom_literal::integer::km!(100)` |
-| `70.008e7feet` | `crate::custom_literal::decimal::feet!(70.008e7)` |
+| `70.008e7feet` | `crate::custom_literal::float::feet!(70.008e7)` |
 | `"foo"bar` | `crate::custom_literal::string::bar!("foo")` |
 | `'a'ascii` | `crate::custom_literal::character::ascii!('a')` |
 | `b"foo"bar` | `crate::custom_literal::byte_string::bar!(b"foo")` |
@@ -181,7 +181,7 @@ mod custom_literal {
         pub(crate) use custom;
     }
 
-    pub mod decimal {
+    pub mod float {
         macro_rules! custom {
             ($value:literal) => {
                 // ...
