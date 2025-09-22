@@ -529,11 +529,11 @@ impl IntoIterator for CompileError {
 
     fn into_iter(self) -> Self::IntoIter {
         [
-            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
-            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)).with_span(self.span),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)).with_span(self.span),
             TokenTree::Ident(Ident::new("core", self.span)),
-            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
-            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)).with_span(self.span),
+            TokenTree::Punct(Punct::new(':', Spacing::Joint)).with_span(self.span),
             TokenTree::Ident(Ident::new("compile_error", self.span)),
             TokenTree::Punct(Punct::new('!', Spacing::Alone)).with_span(self.span),
             TokenTree::Group(Group::new(Delimiter::Brace, {
